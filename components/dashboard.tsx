@@ -94,7 +94,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-4">
       {activeTab === "overview" && (
-        <div className="space-y-6 min-h-0 mb-8">
+        <div className="space-y-6 min-h-0 mb-16">
           {/* Overview Page Title */}
           <div className="w-full">
             <div className="flex items-center justify-between">
@@ -135,11 +135,14 @@ export default function Dashboard() {
               <EquipmentCycleTracking />
             </div>
           </div>
+          
+          {/* Spacer to ensure content exceeds viewport height */}
+          <div className="h-32 w-full"></div>
         </div>
       )}
 
       {activeTab === "monitoring" && (
-        <div className="space-y-6 min-h-0 mb-8">
+        <div className="space-y-6 min-h-0 mb-16">
           {/* Equipment Health Score - Full Width */}
           <div className="w-full">
             <EquipmentHealthScore
@@ -168,6 +171,9 @@ export default function Dashboard() {
               <EquipmentCycleTracking />
             </div>
           </div>
+          
+          {/* Spacer to ensure content exceeds viewport height */}
+          <div className="h-32 w-full"></div>
         </div>
       )}
 
