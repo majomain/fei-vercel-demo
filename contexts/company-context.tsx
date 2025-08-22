@@ -71,9 +71,17 @@ const defaultCompanies: Company[] = [
 export function CompanyProvider({ children }: { children: ReactNode }) {
   const [companies, setCompanies] = useState<Company[]>(defaultCompanies)
   const [currentCompany, setCurrentCompanyState] = useState<Company>(defaultCompanies[0])
+  const [isClient, setIsClient] = useState(false)
 
-  // Load current company from localStorage on mount
+  // Ensure we're on the client side
   useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Load current company from localStorage on mount (only on client)
+  useEffect(() => {
+    if (!isClient) return
+    
     try {
       const savedCompanyId = localStorage.getItem("currentCompanyId")
       if (savedCompanyId) {
@@ -85,20 +93,22 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error loading company from localStorage:", error)
     }
-  }, []) // Only run once on mount
+  }, [isClient]) // Only run when isClient changes
 
   const setCurrentCompany = (companyId: string) => {
     try {
       const company = companies.find(c => c.id === companyId)
       if (company) {
         setCurrentCompanyState(company)
-        try {
-          localStorage.setItem("currentCompanyId", companyId)
-        } catch (error) {
-          console.error("Error saving company to localStorage:", error)
+        if (isClient) {
+          try {
+            localStorage.setItem("currentCompanyId", companyId)
+          } catch (error) {
+            console.error("Error saving company to localStorage:", error)
+          }
         }
       } else {
-        console.warn(`Company with id ${companyId} not found`)
+        console.error("Company not found:", companyId)
       }
     } catch (error) {
       console.error("Error setting current company:", error)
