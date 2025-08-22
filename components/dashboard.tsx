@@ -188,7 +188,7 @@ export default function Dashboard() {
       )}
 
       {activeTab === "equipment" && (
-        <div className="space-y-4">
+        <div className="space-y-4 mb-16">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Equipment Management</h2>
             <Button onClick={() => setShowOnboarding(true)} variant="outline" size="sm">
@@ -197,11 +197,19 @@ export default function Dashboard() {
             </Button>
           </div>
           <EquipmentList onEquipmentSelect={handleEquipmentSelect} />
+          
+          {/* Large spacer to ensure content exceeds viewport height */}
+          <div className="h-96 w-full bg-gradient-to-b from-transparent to-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <p className="text-lg font-medium">End of Equipment Content</p>
+              <p className="text-sm">Scroll up to view all equipment management content</p>
+            </div>
+          </div>
         </div>
       )}
 
       {activeTab === "maintenance" && (
-        <div className="space-y-4">
+        <div className="space-y-4 mb-16">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Maintenance Schedule</h2>
             <Button onClick={() => setShowOnboarding(true)} variant="outline" size="sm">
@@ -241,11 +249,19 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+          
+          {/* Large spacer to ensure content exceeds viewport height */}
+          <div className="h-96 w-full bg-gradient-to-b from-transparent to-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <p className="text-lg font-medium">End of Maintenance Content</p>
+              <p className="text-sm">Scroll up to view all maintenance schedule content</p>
+            </div>
+          </div>
         </div>
       )}
 
       {activeTab === "data-logs" && (
-        <div className="space-y-4">
+        <div className="space-y-4 mb-16">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Data Logs</h2>
             <Button onClick={() => setShowOnboarding(true)} variant="outline" size="sm">
@@ -254,20 +270,36 @@ export default function Dashboard() {
             </Button>
           </div>
           <DataLogs />
+          
+          {/* Large spacer to ensure content exceeds viewport height */}
+          <div className="h-96 w-full bg-gradient-to-b from-transparent to-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <p className="text-lg font-medium">End of Data Logs Content</p>
+              <p className="text-sm">Scroll up to view all data logs content</p>
+            </div>
+          </div>
         </div>
       )}
 
       {activeTab === "users" && (
-        <div className="space-y-4">
+        <div className="space-y-4 mb-16">
           {/* Placeholder for Users section */}
           <div className="w-full">
             <p className="text-lg font-semibold">Users Section</p>
+          </div>
+          
+          {/* Large spacer to ensure content exceeds viewport height */}
+          <div className="h-96 w-full bg-gradient-to-b from-transparent to-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <p className="text-lg font-medium">End of Users Content</p>
+              <p className="text-sm">Scroll up to view all users content</p>
+            </div>
           </div>
         </div>
       )}
 
       {activeTab === "generate-report" && (
-        <div className="space-y-4">
+        <div className="space-y-4 mb-16">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Generate Report</h2>
           </div>
@@ -298,51 +330,25 @@ export default function Dashboard() {
                   <label className="text-sm font-medium">Equipment Filter</label>
                   <select className="w-full p-2 border rounded-md">
                     <option>All Equipment</option>
-                    <option>Production Line A</option>
-                    <option>Production Line B</option>
-                    <option>Utilities</option>
+                    <option>Front of House</option>
+                    <option>Kitchen</option>
+                    <option>Back of House</option>
                   </select>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Reports</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium">Equipment Performance Report</div>
-                    <div className="text-sm text-muted-foreground">Generated on Dec 15, 2024</div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    Download
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium">Maintenance Activity Summary</div>
-                    <div className="text-sm text-muted-foreground">Generated on Dec 12, 2024</div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    Download
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium">Executive Summary Q4</div>
-                    <div className="text-sm text-muted-foreground">Generated on Dec 10, 2024</div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    Download
-                  </Button>
-                </div>
+              <div className="mt-6">
+                <Button className="w-full">Generate Report</Button>
               </div>
             </CardContent>
           </Card>
+          
+          {/* Large spacer to ensure content exceeds viewport height */}
+          <div className="h-96 w-full bg-gradient-to-b from-transparent to-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <p className="text-lg font-medium">End of Report Content</p>
+              <p className="text-sm">Scroll up to view all report generation content</p>
+            </div>
+          </div>
         </div>
       )}
 
