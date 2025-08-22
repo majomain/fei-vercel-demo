@@ -1,5 +1,4 @@
 import Dashboard from "@/components/dashboard"
-import { DashboardLayout } from "@/components/dashboard-layout"
 import { Suspense } from "react"
 
 function LoadingFallback() {
@@ -16,9 +15,7 @@ function LoadingFallback() {
 export default function Home() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <DashboardLayout>
-        <Dashboard />
-      </DashboardLayout>
+      <Dashboard />
     </Suspense>
   )
 }

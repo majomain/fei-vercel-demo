@@ -19,8 +19,8 @@ export function GeneralSettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Organization Information</CardTitle>
-          <CardDescription>Basic information about your organization and facility.</CardDescription>
+          <CardTitle>Company Information</CardTitle>
+          <CardDescription>Basic information about your company and facility.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -28,7 +28,7 @@ import {
   isToday,
   isPast,
 } from "date-fns"
-import { DashboardLayout } from "@/components/dashboard-layout"
+
 import type { MaintenanceEvent } from "@/components/unified-maintenance-scheduler"
 import { MaintenanceSchedule } from "@/components/maintenance-schedule"
 
@@ -45,20 +45,20 @@ const getStatusInfo = (event: MaintenanceEvent): { text: string; className: stri
     }
   }
   switch (event.status) {
-    case "scheduled":
+    case "pending":
       return {
         text: "SCHEDULED",
         className: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300",
-      }
-    case "in-progress":
-      return {
-        text: "IN PROGRESS",
-        className: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300",
       }
     case "completed":
       return {
         text: "COMPLETED",
         className: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300",
+      }
+    case "overdue":
+      return {
+        text: "OVERDUE",
+        className: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300",
       }
     default:
       return { text: "UNKNOWN", className: "bg-gray-100 text-gray-800" }
@@ -191,8 +191,7 @@ export default function MaintenancePage() {
   /* ---------- UI ---------- */
 
   return (
-    <DashboardLayout>
-      <div className="min-h-full w-full space-y-8 p-6">
+    <div className="space-y-6">
         {/* calendar first */}
         <Card>
           <CardHeader>
@@ -289,7 +288,7 @@ export default function MaintenancePage() {
 
         {/* floating scroll buttons */}
         {showScrollButtons && (
-          <div className="floating-scroll-buttons">
+          <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
             <Button
               onClick={() => scrollTo("top")}
               className="h-12 w-12 rounded-full bg-primary shadow-lg hover:bg-primary/90"
@@ -307,16 +306,7 @@ export default function MaintenancePage() {
             </Button>
           </div>
         )}
-
-        {/* Large spacer to ensure content exceeds viewport height */}
-        <div className="h-96 w-full bg-gradient-to-b from-transparent to-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <p className="text-lg font-medium">End of Maintenance Content</p>
-            <p className="text-sm">Scroll up to view all maintenance schedule content</p>
-          </div>
-        </div>
       </div>
-    </DashboardLayout>
   )
 }
 
