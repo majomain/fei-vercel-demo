@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo, Suspense } from "react"
+import { useState, useMemo, Suspense, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { LayoutDashboard, Settings, Wrench, Box, Database, Plus, LogOut, Activity, Grid3X3, User } from "lucide-react"
 import { NotificationsDropdown } from "./notifications-dropdown"
@@ -18,7 +18,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarProvider,
-  SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import {
@@ -31,7 +30,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { EquipmentOnboarding } from "./equipment-onboarding"
 import { UserProfileModal } from "./user-profile-modal"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { ScrollToTop } from "./scroll-to-top"
+import { useRouter, usePathname } from "next/navigation"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -41,11 +41,23 @@ interface DashboardLayoutProps {
 function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
+
   // const { currentCompany, companies, setCurrentCompany } = useCompany()
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showUserProfile, setShowUserProfile] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  // Restore scroll position when navigating
+  useEffect(() => {
+    const handleRouteChange = () => {
+      // Reset scroll position for new pages
+      if (typeof window !== 'undefined') {
+        window.scrollTo(0, 0)
+      }
+    }
+
+    handleRouteChange()
+  }, [pathname])
 
   const handleNavigation = (itemId: string) => {
     switch (itemId) {
@@ -53,7 +65,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
         router.push("/")
         break
       case "equipment":
-        router.push("/?tab=equipment")
+        router.push("/equipment")
         break
       case "maintenance":
         router.push("/maintenance")
@@ -61,10 +73,8 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
       case "monitoring":
         router.push("/monitoring")
         break
-
-
       case "data-logs":
-        router.push("/?tab=data-logs")
+        router.push("/data-logs")
         break
       default:
         break
@@ -103,7 +113,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
       id: "equipment",
       label: "Equipment",
       icon: Box,
-      path: "/?tab=equipment",
+      path: "/equipment",
     },
     {
       id: "maintenance",
@@ -117,33 +127,27 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
       icon: Activity,
       path: "/monitoring",
     },
-
-
     {
       id: "data-logs",
       label: "Data Logs",
       icon: Database,
-      path: "/?tab=data-logs",
+      path: "/data-logs",
     },
-
   ]
 
   const activeItem = useMemo(() => {
     if (pathname === "/maintenance") return "maintenance"
     if (pathname === "/monitoring") return "monitoring"
-    if (pathname === "/") {
-      const tab = searchParams.get("tab")
-      if (tab === "equipment") return "equipment"
-      if (tab === "data-logs") return "data-logs"
-      return "overview"
-    }
+    if (pathname === "/equipment") return "equipment"
+    if (pathname === "/data-logs") return "data-logs"
+    if (pathname === "/") return "overview"
     return "overview"
-  }, [pathname, searchParams])
+  }, [pathname])
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="min-h-screen w-full dashboard-layout">
       {/* Full-width header at the top */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background z-10">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background z-10 sticky top-0">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <ArkimLogo className="h-8 w-8 text-primary" />
           <h1 className="text-lg font-semibold truncate">Arkim Dashboard</h1>
@@ -185,12 +189,12 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/settings")}>
+              <DropdownMenuItem className="dropdown-menu-item" onClick={() => router.push("/settings")}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuItem className="dropdown-menu-item" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
@@ -208,7 +212,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
       </header>
 
       {/* Content area with sidebar and main content */}
-      <div className="flex h-[calc(100vh-4rem)] w-full">
+      <div className="flex min-h-[calc(100vh-4rem)] w-full">
         <SidebarProvider>
           <Sidebar className="shrink-0">
             <SidebarHeader>
@@ -236,11 +240,12 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
             </SidebarContent>
           </Sidebar>
 
-          <SidebarInset className="flex-1 min-w-0">
-            <main className="flex-1 overflow-y-auto overflow-x-hidden">
-              <div className="p-4 pb-8">{children}</div>
+          {/* Main content area - fixed for proper scrolling */}
+          <div className="flex-1 min-w-0">
+            <main className="min-h-full overflow-y-auto overflow-x-hidden">
+              <div className="p-6 pb-12 w-full max-w-none">{children}</div>
             </main>
-          </SidebarInset>
+          </div>
         </SidebarProvider>
       </div>
 
@@ -253,11 +258,21 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
         />
       )}
       {showUserProfile && <UserProfileModal open={showUserProfile} onOpenChange={setShowUserProfile} />}
+      
+      {/* Scroll to top button */}
+      <ScrollToTop />
     </div>
   )
 }
 
-export function DashboardLayout({ children, onAddEquipment }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, onAddEquipment }: DashboardLayoutProps) {
+  const pathname = usePathname()
+  
+  // Don't render dashboard layout for settings pages - they have their own layout
+  if (pathname.startsWith('/settings')) {
+    return <>{children}</>
+  }
+
   return (
     <Suspense fallback={
       <div className="h-screen w-screen flex items-center justify-center">

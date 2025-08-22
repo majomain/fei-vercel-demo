@@ -2,10 +2,8 @@
 
 import type React from "react"
 import { Button } from "@/components/ui/button"
-import { Settings, Building2, MapPin, Users, Key, ArrowLeft, User, LogOut } from "lucide-react"
+import { Settings, MapPin, Users, Key, User, ArrowLeft, X } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
-import { CompanySelector } from "./company-selector"
-// import { useCompany } from "@/contexts/company-context"
 import { Suspense } from "react"
 import {
   Sidebar,
@@ -74,19 +72,6 @@ function SettingsLayoutContent({ children }: SettingsLayoutProps) {
     return "general"
   }
 
-  const handleViewAllCompanies = () => {
-    router.push("/settings/locations")
-  }
-
-  const handleLogout = () => {
-    try {
-      console.log("[v0] Logout clicked")
-      // Add actual logout logic here when ready
-    } catch (error) {
-      console.error("[v0] Logout error:", error)
-    }
-  }
-
   return (
     <div className="h-screen w-screen flex settings-layout">
       <SidebarProvider>
@@ -130,24 +115,14 @@ function SettingsLayoutContent({ children }: SettingsLayoutProps) {
                   <h1 className="text-lg font-semibold truncate">Settings</h1>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {/* Temporarily disabled CompanySelector
-                  <CompanySelector
-                    // currentCompany={currentCompany}
-                    // companies={companies}
-                    // onCompanyChange={setCurrentCompany}
-                    onViewAllCompanies={handleViewAllCompanies}
-                    onLogout={handleLogout}
-                    userEmail="john.doe@example.com"
-                    userName="John Doe"
-                  />
-                  */}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleLogout}
+                    onClick={() => router.push("/")}
                     className="h-8 w-8 p-0"
+                    title="Close settings and return to dashboard"
                   >
-                    <LogOut className="h-4 w-4" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </header>

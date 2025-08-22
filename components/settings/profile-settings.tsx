@@ -35,7 +35,6 @@ export function ProfileSettings() {
                   <AvatarImage src="/placeholder-user.jpg" alt="Profile" />
                   <AvatarFallback className="text-lg bg-pink-100 text-pink-700">JO</AvatarFallback>
                 </Avatar>
-                <Button variant="outline">Upload photo</Button>
               </div>
 
               {/* Name Fields */}
