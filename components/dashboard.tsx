@@ -95,6 +95,18 @@ export default function Dashboard() {
     <div className="space-y-4">
       {activeTab === "overview" && (
         <div className="space-y-4">
+          {/* Overview Page Title */}
+          <div className="w-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
+                <p className="text-muted-foreground">
+                  Comprehensive view of your equipment performance and system status
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Equipment Health Score - Full Width */}
           <div className="w-full">
             <EquipmentHealthScore
