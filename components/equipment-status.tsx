@@ -42,8 +42,8 @@ export function EquipmentStatus() {
           <CardDescription>Current operational status of all {totalEquipment} equipment</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="min-h-[300px] h-auto">
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={data}

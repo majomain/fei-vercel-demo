@@ -109,7 +109,7 @@ export function EquipmentCycleTracking() {
         </Select>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="min-h-[400px] h-auto">
           <div className="space-y-6 pr-4">
             {equipment.map((item) => (
               <div key={item.id} className="space-y-2">
