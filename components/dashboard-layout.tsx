@@ -236,9 +236,9 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
             </SidebarContent>
           </Sidebar>
 
-          <SidebarInset className="flex-1 min-w-0 overflow-hidden">
+          <SidebarInset className="flex-1 min-w-0">
             <main className="flex-1 overflow-y-auto overflow-x-hidden">
-              <div className="p-4">{children}</div>
+              <div className="p-4 pb-8">{children}</div>
             </main>
           </SidebarInset>
         </SidebarProvider>
