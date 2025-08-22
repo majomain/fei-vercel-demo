@@ -310,6 +310,14 @@ export function Monitoring() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Large spacer to ensure content exceeds viewport height */}
+        <div className="h-96 w-full bg-gradient-to-b from-transparent to-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <p className="text-lg font-medium">End of Monitoring Content</p>
+            <p className="text-sm">Scroll up to view all monitoring data and charts</p>
+          </div>
+        </div>
       </div>
     </div>
   )
