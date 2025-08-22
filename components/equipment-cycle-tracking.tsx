@@ -109,49 +109,55 @@ export function EquipmentCycleTracking() {
         </Select>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="min-h-[400px] h-auto">
-          <div className="space-y-6 pr-4">
-            {equipment.map((item) => (
-              <div key={item.id} className="space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <Badge className={getStatusColor(item.status)}>
-                      {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                    </Badge>
+        <div className="relative">
+          <div className="h-[500px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+            <div className="space-y-6 pr-4">
+              {equipment.map((item) => (
+                <div key={item.id} className="space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <Badge className={getStatusColor(item.status)}>
+                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {item.status === "operational" ? (
+                        <Play className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Pause className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="font-mono">{formatRunTime(item.runTime || 0)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {item.status === "operational" ? (
-                      <Play className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Pause className="h-4 w-4 text-red-500" />
-                    )}
-                    <span className="font-mono">{formatRunTime(item.runTime || 0)}</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p>
+                        Total Cycles ({timeRange}): {getCycleCount(item)}
+                      </p>
+                      <p>Since Maint.: {item.cyclesSinceMaintenance} cycles</p>
+                    </div>
+                    <div>
+                      <p>Post-Maint. Eff.: {item.postMaintenanceEfficiency}%</p>
+                      <p>Next Maint.: {item.nextMaintenanceDays} days</p>
+                    </div>
                   </div>
+                  {(item.cyclesTrend || 0) > 20 && (
+                    <div className="flex items-center space-x-2 text-yellow-600">
+                      <AlertTriangle className="h-4 w-4" />
+                      <p className="text-sm">Cycling {item.cyclesTrend}% more than usual</p>
+                    </div>
+                  )}
+                  <Progress value={((30 - item.nextMaintenanceDays) / 30) * 100} className="h-2" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p>
-                      Total Cycles ({timeRange}): {getCycleCount(item)}
-                    </p>
-                    <p>Since Maint.: {item.cyclesSinceMaintenance} cycles</p>
-                  </div>
-                  <div>
-                    <p>Post-Maint. Eff.: {item.postMaintenanceEfficiency}%</p>
-                    <p>Next Maint.: {item.nextMaintenanceDays} days</p>
-                  </div>
-                </div>
-                {(item.cyclesTrend || 0) > 20 && (
-                  <div className="flex items-center space-x-2 text-yellow-600">
-                    <AlertTriangle className="h-4 w-4" />
-                    <p className="text-sm">Cycling {item.cyclesTrend}% more than usual</p>
-                  </div>
-                )}
-                <Progress value={((30 - item.nextMaintenanceDays) / 30) * 100} className="h-2" />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </ScrollArea>
+          {/* Scroll indicator */}
+          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded-md">
+            {equipment.length} equipment • Scroll to view all
+          </div>
+        </div>
       </CardContent>
     </Card>
   )
