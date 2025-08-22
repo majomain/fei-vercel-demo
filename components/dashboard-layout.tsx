@@ -3,12 +3,12 @@
 import type React from "react"
 import { useState, useMemo, Suspense } from "react"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Settings, Wrench, Box, Database, Plus, LogOut, Activity, Grid3X3 } from "lucide-react"
+import { LayoutDashboard, Settings, Wrench, Box, Database, Plus, LogOut, Activity, Grid3X3, User } from "lucide-react"
 import { NotificationsDropdown } from "./notifications-dropdown"
 import { ThemeToggle } from "./theme-toggle"
 import { CompanySelector } from "./company-selector"
 import { SimpleCompanyDisplay } from "./simple-company-display"
-import { useCompany } from "@/contexts/company-context"
+// import { useCompany } from "@/contexts/company-context"
 import { ArkimLogo } from "./arkim-logo"
 import {
   Sidebar,
@@ -42,7 +42,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { currentCompany, companies, setCurrentCompany } = useCompany()
+  // const { currentCompany, companies, setCurrentCompany } = useCompany()
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showUserProfile, setShowUserProfile] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -196,12 +196,14 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {/* Temporarily disabled CompanySelector
           <CompanySelector
-            currentCompany={currentCompany}
-            companies={companies}
-            onCompanyChange={setCurrentCompany}
+            // currentCompany={currentCompany}
+            // companies={companies}
+            // onCompanyChange={setCurrentCompany}
             onViewAllCompanies={handleViewAllCompanies}
           />
+          */}
         </div>
       </header>
 
