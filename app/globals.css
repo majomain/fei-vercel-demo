@@ -98,6 +98,20 @@
     @apply w-full min-w-0;
   }
 
+  /* Ensure proper scrolling behavior */
+  .dashboard-scrollable {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+
+  /* Force content to be scrollable */
+  .force-scroll {
+    height: 120vh !important;
+    min-height: 120vh !important;
+  }
+
   .dashboard-grid {
     @apply grid gap-4 w-full;
     grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));

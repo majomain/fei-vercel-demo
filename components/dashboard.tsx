@@ -92,7 +92,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 force-scroll">
       {activeTab === "overview" && (
         <div className="space-y-6 min-h-0 mb-16">
           {/* Overview Page Title */}
@@ -136,8 +136,13 @@ export default function Dashboard() {
             </div>
           </div>
           
-          {/* Spacer to ensure content exceeds viewport height */}
-          <div className="h-32 w-full"></div>
+          {/* Large spacer to ensure content exceeds viewport height */}
+          <div className="h-96 w-full bg-gradient-to-b from-transparent to-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <p className="text-lg font-medium">End of Content</p>
+              <p className="text-sm">Scroll up to view all dashboard content</p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -172,8 +177,13 @@ export default function Dashboard() {
             </div>
           </div>
           
-          {/* Spacer to ensure content exceeds viewport height */}
-          <div className="h-32 w-full"></div>
+          {/* Large spacer to ensure content exceeds viewport height */}
+          <div className="h-96 w-full bg-gradient-to-b from-transparent to-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <p className="text-lg font-medium">End of Content</p>
+              <p className="text-sm">Scroll up to view all dashboard content</p>
+            </div>
+          </div>
         </div>
       )}
 
