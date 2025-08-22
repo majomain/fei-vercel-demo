@@ -94,7 +94,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-4">
       {activeTab === "overview" && (
-        <div className="space-y-6 min-h-0">
+        <div className="space-y-6 min-h-0 mb-8">
           {/* Overview Page Title */}
           <div className="w-full">
             <div className="flex items-center justify-between">
@@ -139,7 +139,7 @@ export default function Dashboard() {
       )}
 
       {activeTab === "monitoring" && (
-        <div className="space-y-6 min-h-0">
+        <div className="space-y-6 min-h-0 mb-8">
           {/* Equipment Health Score - Full Width */}
           <div className="w-full">
             <EquipmentHealthScore

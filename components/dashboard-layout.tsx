@@ -208,7 +208,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
       </header>
 
       {/* Content area with sidebar and main content */}
-      <div className="flex h-[calc(100vh-4rem)] w-full">
+      <div className="flex w-full">
         <SidebarProvider>
           <Sidebar className="shrink-0">
             <SidebarHeader>
@@ -238,7 +238,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
 
           <SidebarInset className="flex-1 min-w-0">
             <main className="flex-1 overflow-y-auto overflow-x-hidden">
-              <div className="p-4 pb-8">{children}</div>
+              <div className="p-4 pb-12">{children}</div>
             </main>
           </SidebarInset>
         </SidebarProvider>
