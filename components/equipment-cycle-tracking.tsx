@@ -110,7 +110,7 @@ export function EquipmentCycleTracking() {
       </CardHeader>
       <CardContent>
         <div className="relative">
-          <div className="h-[450px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+          <div className="h-[400px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
             <div className="space-y-6 pr-4">
               {equipment.map((item) => (
                 <div key={item.id} className="space-y-2">
