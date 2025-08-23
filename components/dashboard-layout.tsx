@@ -288,3 +288,6 @@ export default function DashboardLayout({ children, onAddEquipment }: DashboardL
     </Suspense>
   )
 }
+
+// Also export as named export for compatibility
+export { DashboardLayout }
