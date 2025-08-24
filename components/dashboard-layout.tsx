@@ -105,7 +105,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
   const navigationItems = [
     {
       id: "overview",
-      label: "Overview",
+      label: "Dashboard",
       icon: LayoutDashboard,
       path: "/",
     },

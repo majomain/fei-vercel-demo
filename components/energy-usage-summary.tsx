@@ -4,16 +4,15 @@ import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts"
-import { Zap, DollarSign, TrendingUp, Calendar } from "lucide-react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from "recharts"
+import { Zap, Calendar, TrendingUp } from "lucide-react"
 import { equipmentData } from "./equipment-list"
 
 interface EnergyDataPoint {
-  date: string
-  day: number
-  actual?: number
-  projected?: number
-  cost?: number
+  period: string
+  currentMonth: number
+  previousMonth?: number
+  rateTier?: 'on-peak' | 'mid-peak' | 'off-peak' | 'super-off-peak'
 }
 
 interface AssetCost {
@@ -26,6 +25,8 @@ interface AssetCost {
 
 export function EnergyUsageSummary() {
   const [selectedAsset, setSelectedAsset] = useState("all")
+  const [granularity, setGranularity] = useState<"24hours" | "monthly" | "yearly">("24hours")
+  const [showPreviousMonth, setShowPreviousMonth] = useState(false)
   const [energyData, setEnergyData] = useState<EnergyDataPoint[]>([])
   const [assetCosts, setAssetCosts] = useState<AssetCost[]>([])
 
@@ -38,76 +39,95 @@ export function EnergyUsageSummary() {
     "Packaging Machine": 0.11,
   }
 
-  // Generate energy usage data
+  // Generate energy usage data based on granularity
   useEffect(() => {
     const today = new Date()
-    const currentDay = today.getDate()
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
-
-    const data: EnergyDataPoint[] = []
-
-    // Generate actual data for days 1 to current day with cumulative totals
-    let cumulativeUsage = 0
-    let cumulativeCost = 0
-
-    for (let day = 1; day <= currentDay; day++) {
-      const baseUsage =
-        selectedAsset === "all"
-          ? equipmentData.reduce((sum, eq) => sum + (50 + Math.random() * 30), 0)
-          : 50 + Math.random() * 30
-
-      const dailyUsage = baseUsage + Math.sin(day / 7) * 10 + (Math.random() * 20 - 10)
-      const rate =
-        selectedAsset === "all"
-          ? 0.11
-          : energyRates[
-              equipmentData.find((eq) => `equipment${eq.id}` === selectedAsset)?.type as keyof typeof energyRates
-            ] || 0.11
-
-      const dailyUsageValue = Math.max(0, dailyUsage)
-      const dailyCost = dailyUsageValue * rate
-
-      cumulativeUsage += dailyUsageValue
-      cumulativeCost += dailyCost
-
-      data.push({
-        date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
-        day,
-        actual: cumulativeUsage,
-        cost: cumulativeCost,
-      })
+    const currentMonth = today.getMonth()
+    const currentYear = today.getFullYear()
+    const currentHour = today.getHours()
+    
+    let data: EnergyDataPoint[] = []
+    
+    if (granularity === "24hours") {
+      // Full 24-hour view for current day
+      const today = new Date()
+      const isWeekend = today.getDay() === 0 || today.getDay() === 6
+      const isSummer = today.getMonth() >= 5 && today.getMonth() <= 8 // Jun-Sep
+      
+      for (let hour = 0; hour < 24; hour++) {
+        const baseUsage = selectedAsset === "all" 
+          ? equipmentData.reduce((sum, eq) => sum + (2 + Math.random() * 1.5), 0)
+          : 2 + Math.random() * 1.5
+        
+        // Only show data for hours that have passed, leave future hours blank
+        const isPastHour = hour <= currentHour
+        
+        const hourlyUsage = baseUsage + Math.sin(hour / 6) * 0.5 + (Math.random() * 1 - 0.5)
+        const previousDayUsage = baseUsage + Math.sin(hour / 6) * 0.4 + (Math.random() * 0.8 - 0.4)
+        
+        // Determine SCE TOU rate tier for this hour
+        let rateTier: 'on-peak' | 'mid-peak' | 'off-peak' | 'super-off-peak' = 'off-peak'
+        
+        if (hour >= 16 && hour < 21) { // 4:00 PM to 8:59 PM
+          if (isSummer) {
+            rateTier = 'on-peak'
+          } else {
+            rateTier = 'mid-peak'
+          }
+        } else if (hour >= 8 && hour < 16) { // 8:00 AM to 3:59 PM
+          if (!isSummer) {
+            rateTier = 'super-off-peak'
+          }
+        }
+        // All other hours default to off-peak
+        
+        data.push({
+          period: `${hour.toString().padStart(2, '0')}:00`,
+          currentMonth: isPastHour ? Math.max(0, hourlyUsage) : 0,
+          previousMonth: showPreviousMonth && isPastHour ? Math.max(0, previousDayUsage) : 0,
+          rateTier: isPastHour ? rateTier : undefined
+        })
+      }
+    } else if (granularity === "monthly") {
+      // Monthly data for current year
+      const currentMonthNum = today.getMonth()
+      
+      for (let month = 0; month <= currentMonthNum; month++) {
+        const baseUsage = selectedAsset === "all" 
+          ? equipmentData.reduce((sum, eq) => sum + (1500 + Math.random() * 900), 0)
+          : 1500 + Math.random() * 900
+        
+        const monthlyUsage = baseUsage + Math.sin(month / 3) * 300 + (Math.random() * 600 - 300)
+        const previousYearUsage = baseUsage + Math.sin(month / 3) * 240 + (Math.random() * 450 - 225)
+        
+        data.push({
+          period: new Date(currentYear, month).toLocaleDateString('en-US', { month: 'short' }),
+          currentMonth: Math.max(0, monthlyUsage),
+          previousMonth: showPreviousMonth ? Math.max(0, previousYearUsage) : 0
+        })
+      }
+    } else {
+      // Yearly data for multiple years
+      const currentYearNum = today.getFullYear()
+      
+      for (let year = currentYearNum - 2; year <= currentYearNum; year++) {
+        const baseUsage = selectedAsset === "all" 
+          ? equipmentData.reduce((sum, eq) => sum + (18000 + Math.random() * 12000), 0)
+          : 18000 + Math.random() * 12000
+        
+        const yearlyUsage = baseUsage + Math.sin(year / 2) * 3000 + (Math.random() * 6000 - 3000)
+        const previousYearUsage = baseUsage + Math.sin((year - 1) / 2) * 2400 + (Math.random() * 4500 - 2250)
+        
+        data.push({
+          period: year.toString(),
+          currentMonth: Math.max(0, yearlyUsage),
+          previousMonth: showPreviousMonth ? Math.max(0, previousYearUsage) : 0
+        })
+      }
     }
-
-    // Generate projected data for remaining days with continued accumulation
-    const avgDailyUsage = cumulativeUsage / currentDay
-    const trend = (data[data.length - 1]?.actual || avgDailyUsage) - (data[0]?.actual || 0)
-    const trendPerDay = trend / data.length
-
-    for (let day = currentDay + 1; day <= daysInMonth; day++) {
-      const projectedDailyUsage = avgDailyUsage + Math.sin(day / 7) * 5
-      const rate =
-        selectedAsset === "all"
-          ? 0.11
-          : energyRates[
-              equipmentData.find((eq) => `equipment${eq.id}` === selectedAsset)?.type as keyof typeof energyRates
-            ] || 0.11
-
-      const dailyUsageValue = Math.max(0, projectedDailyUsage)
-      const dailyCost = dailyUsageValue * rate
-
-      cumulativeUsage += dailyUsageValue
-      cumulativeCost += dailyCost
-
-      data.push({
-        date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
-        day,
-        projected: cumulativeUsage,
-        cost: cumulativeCost,
-      })
-    }
-
+    
     setEnergyData(data)
-  }, [selectedAsset])
+  }, [selectedAsset, granularity, showPreviousMonth])
 
   // Calculate asset costs
   useEffect(() => {
@@ -128,43 +148,118 @@ export function EnergyUsageSummary() {
     setAssetCosts(costs)
   }, [])
 
-  // Calculate totals
+  // Calculate totals for current month
   const totals = useMemo(() => {
-    const actualUsage = energyData.filter((d) => d.actual).reduce((sum, d) => sum + (d.actual || 0), 0)
-    const projectedUsage = energyData.filter((d) => d.projected).reduce((sum, d) => sum + (d.projected || 0), 0)
-    const totalUsage = actualUsage + projectedUsage
-
-    const actualCost = energyData.filter((d) => d.actual).reduce((sum, d) => sum + (d.cost || 0), 0)
-    const projectedCost = energyData.filter((d) => d.projected).reduce((sum, d) => sum + (d.cost || 0), 0)
-    const totalCost = actualCost + projectedCost
-
+    const totalUsage = energyData.reduce((sum, d) => sum + (d.currentMonth || 0), 0)
+    const avgUsage = energyData.length > 0 ? totalUsage / energyData.length : 0
+    
     return {
-      actualUsage,
-      projectedUsage,
       totalUsage,
-      actualCost,
-      projectedCost,
-      totalCost,
+      avgUsage,
     }
   }, [energyData])
+
+  const CustomChartLegend = ({ payload }: any) => {
+    return (
+      <ul className="flex justify-center gap-x-4 mt-2">
+        {payload.map((entry: any, index: number) => {
+          const { value } = entry;
+          
+          // Only render legend items for the date series (currentMonth and previousMonth)
+          if (value.includes("Sun,")) {
+            // Today's data - black stroke
+            return (
+              <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
+                <span
+                  style={{
+                    border: '2px solid black',
+                    backgroundColor: 'transparent',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '4px',
+                    display: 'inline-block',
+                    marginRight: '8px',
+                    verticalAlign: 'middle'
+                  }}
+                ></span>
+                {value}
+              </li>
+            );
+          } else if (value.includes("Sat,")) {
+            // Previous day data - grey stroke
+            return (
+              <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
+                <span
+                  style={{
+                    border: '2px solid hsl(var(--muted-foreground))',
+                    backgroundColor: 'transparent',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '4px',
+                    display: 'inline-block',
+                    marginRight: '8px',
+                    verticalAlign: 'middle'
+                  }}
+                ></span>
+                {value}
+              </li>
+            );
+          }
+          return null;
+        })}
+      </ul>
+    );
+  };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
-      const isActual = data.actual !== undefined
-      const usage = isActual ? data.actual : data.projected
-      const cost = data.cost
-
+      
       return (
         <div className="bg-background border rounded-md shadow-md p-3">
-          <p className="font-semibold">Day {data.day}</p>
+          <p className="font-semibold">{data.period}</p>
+          {granularity === "24hours" && data.rateTier && (
+            <p className="text-sm mb-2">
+              Rate Tier: <span className="font-medium capitalize">{data.rateTier.replace('-', ' ')}</span>
+            </p>
+          )}
           <p className="text-sm text-muted-foreground">
-            {isActual ? "Cumulative Actual" : "Cumulative Projected"}:{" "}
-            <span className="font-medium">{usage?.toFixed(1)} kWh</span>
+            {granularity === "24hours" ? (
+              <>
+                {(() => {
+                  const today = new Date()
+                  const dayName = today.toLocaleDateString('en-US', { weekday: 'short' })
+                  const day = today.getDate()
+                  const month = today.toLocaleDateString('en-US', { month: 'short' })
+                  return `${dayName}, ${day} ${month}`
+                })()}: <span className="font-medium">{data.currentMonth?.toFixed(1) || 'No data'} kWh</span>
+              </>
+            ) : (
+              <>
+                Current Period: <span className="font-medium">{data.currentMonth?.toFixed(1) || 'No data'} kWh</span>
+              </>
+            )}
           </p>
-          <p className="text-sm text-muted-foreground">
-            Total Cost: <span className="font-medium">${cost?.toFixed(2)}</span>
-          </p>
+          {data.previousMonth && (
+            <p className="text-sm text-muted-foreground">
+              {granularity === "24hours" ? (
+                <>
+                  {(() => {
+                    const yesterday = new Date()
+                    yesterday.setDate(yesterday.getDate() - 1)
+                    const dayName = yesterday.toLocaleDateString('en-US', { weekday: 'short' })
+                    const day = yesterday.getDate()
+                    const month = yesterday.toLocaleDateString('en-US', { month: 'short' })
+                    return `${dayName}, ${day} ${month}`
+                  })()}: <span className="font-medium">{data.previousMonth.toFixed(1)} kWh</span>
+                </>
+              ) : (
+                <>
+                  Previous Period: <span className="font-medium">{data.previousMonth.toFixed(1)} kWh</span>
+                </>
+              )}
+            </p>
+          )}
         </div>
       )
     }
@@ -178,48 +273,55 @@ export function EnergyUsageSummary() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-yellow-500" />
-              Energy Usage & Cost Analysis
+              Energy Usage Analysis
             </CardTitle>
-            <CardDescription>Monthly energy consumption with cost projections</CardDescription>
+            <CardDescription>Real-time energy consumption data</CardDescription>
           </div>
-          <Select value={selectedAsset} onValueChange={setSelectedAsset}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Select Asset" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Assets</SelectItem>
-              {equipmentData.map((equipment) => (
-                <SelectItem key={equipment.id} value={`equipment${equipment.id}`}>
-                  {equipment.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Select value={selectedAsset} onValueChange={setSelectedAsset}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder="Select Asset" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Assets</SelectItem>
+                {equipmentData.map((equipment) => (
+                  <SelectItem key={equipment.id} value={`equipment${equipment.id}`}>
+                    {equipment.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={granularity} onValueChange={(value: "24hours" | "monthly" | "yearly") => setGranularity(value)}>
+              <SelectTrigger className="w-full sm:w-[120px]">
+                <SelectValue placeholder="Granularity" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="24hours">24 Hours</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="yearly">Yearly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="bg-blue-50">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
                   <Zap className="h-4 w-4 text-blue-500" />
-                  <div>
-                    <p className="text-xs text-blue-600 font-medium">Actual Usage</p>
-                    <p className="text-lg font-bold">{totals.actualUsage.toFixed(0)} kWh</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-orange-50">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-4 w-4 text-orange-500" />
-                  <div>
-                    <p className="text-xs text-orange-600 font-medium">Projected Usage</p>
-                    <p className="text-lg font-bold">{totals.projectedUsage.toFixed(0)} kWh</p>
+                  <div className="flex-1">
+                    <p className="text-xs text-blue-600 font-medium">
+                      {granularity === "24hours" ? "Daily Total Usage" :
+                       granularity === "monthly" ? "Monthly Total Usage" :
+                       "Yearly Total Usage"}
+                    </p>
+                    <p className="text-lg font-bold">{totals.totalUsage.toFixed(0)} kWh</p>
+                    <p className="text-sm text-blue-700 font-medium">
+                      ${(totals.totalUsage * 0.057).toFixed(2)}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -228,62 +330,123 @@ export function EnergyUsageSummary() {
             <Card className="bg-green-50">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4 text-green-500" />
-                  <div>
-                    <p className="text-xs text-green-600 font-medium">Actual Cost</p>
-                    <p className="text-lg font-bold">${totals.actualCost.toFixed(0)}</p>
+                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <div className="flex-1">
+                    <p className="text-xs text-green-600 font-medium">
+                      {granularity === "24hours" ? "Average Usage Per Hour" :
+                       granularity === "monthly" ? "Average Usage Per Month" :
+                       "Average Usage Per Year"}
+                    </p>
+                    <p className="text-lg font-bold">{totals.avgUsage.toFixed(1)} kWh</p>
+                    <p className="text-sm text-green-700 font-medium">
+                      ${(totals.avgUsage * 0.057).toFixed(2)}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
+          </div>
 
-            <Card className="bg-purple-50">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-purple-500" />
-                  <div>
-                    <p className="text-xs text-purple-600 font-medium">Total Est. Cost</p>
-                    <p className="text-lg font-bold">${totals.totalCost.toFixed(0)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Previous Period Toggle */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium">Energy Consumption</h3>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="showPreviousMonth"
+                checked={showPreviousMonth}
+                onChange={(e) => setShowPreviousMonth(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <label htmlFor="showPreviousMonth" className="text-sm text-muted-foreground">
+                {granularity === "24hours" ? "Show Previous Day" : 
+                 granularity === "monthly" ? "Show Previous Month" : 
+                 "Show Previous Year"}
+              </label>
+            </div>
           </div>
 
           {/* Energy Usage Chart */}
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={energyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <BarChart data={energyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" label={{ value: "Day of Month", position: "insideBottom", offset: -5 }} />
+                <XAxis dataKey="period" />
                 <YAxis label={{ value: "Energy Usage (kWh)", angle: -90, position: "insideLeft" }} />
                 <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine
-                  x={new Date().getDate()}
-                  stroke="rgba(239, 68, 68, 0.7)"
-                  strokeDasharray="2 2"
-                  label="Today"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="actual"
-                  stroke="hsl(var(--primary))"
+                <Legend content={<CustomChartLegend />} />
+                <Bar
+                  dataKey="currentMonth"
+                  fill="transparent"
+                  stroke="black"
                   strokeWidth={2}
-                  dot={{ r: 3 }}
-                  name="Actual Usage"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="projected"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                  name="Projected Usage"
-                />
-              </LineChart>
+                  name={(() => {
+                    const today = new Date()
+                    const dayName = today.toLocaleDateString('en-US', { weekday: 'short' })
+                    const day = today.getDate()
+                    const month = today.toLocaleDateString('en-US', { month: 'short' })
+                    return `${dayName}, ${day} ${month}`
+                  })()}
+                >
+                  {granularity === "24hours" && energyData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={
+                        entry.rateTier === 'on-peak' ? '#EF4444' : // Red for on-peak
+                        entry.rateTier === 'mid-peak' ? '#F59E0B' : // Yellow for mid-peak
+                        entry.rateTier === 'super-off-peak' ? '#10B981' : // Green for super off-peak
+                        entry.rateTier === 'off-peak' ? '#3B82F6' : // Blue for off-peak
+                        'transparent' // Transparent fill, only stroke visible
+                      }
+                      stroke="black"
+                      strokeWidth={2}
+                    />
+                  ))}
+                </Bar>
+                {showPreviousMonth && (
+                  <Bar
+                    dataKey="previousMonth"
+                    fill="transparent"
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeWidth={2}
+                    name={(() => {
+                      const yesterday = new Date()
+                      yesterday.setDate(yesterday.getDate() - 1)
+                      const dayName = yesterday.toLocaleDateString('en-US', { weekday: 'short' })
+                      const day = yesterday.getDate()
+                      const month = yesterday.toLocaleDateString('en-US', { month: 'short' })
+                      return `${dayName}, ${day} ${month}`
+                    })()}
+                  />
+                )}
+              </BarChart>
             </ResponsiveContainer>
           </div>
+          
+          {/* Rate Tier Legend for 24 Hours View */}
+          {granularity === "24hours" && (
+            <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+              <h4 className="text-sm font-medium mb-3 text-center">SCE Time-of-Use Rate Tiers</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-red-500"></div>
+                  <span className="text-xs">On-Peak (Summer 4-9 PM)<br/>$0.056/kWh</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-yellow-500"></div>
+                  <span className="text-xs">Mid-Peak (Winter 4-9 PM)<br/>$0.059/kWh</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-green-500"></div>
+                  <span className="text-xs">Super Off-Peak (Winter 8 AM-4 PM)<br/>$0.056/kWh</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-blue-500"></div>
+                  <span className="text-xs">Off-Peak (All other hours)<br/>$0.057/kWh</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Asset Cost Breakdown */}
           {selectedAsset === "all" && (
@@ -318,7 +481,7 @@ export function EnergyUsageSummary() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <DollarSign className="h-5 w-5 text-primary" />
+                      <Calendar className="h-5 w-5 text-primary" />
                       <span className="font-semibold">Total Monthly Cost (All Assets)</span>
                     </div>
                     <span className="text-xl font-bold text-primary">

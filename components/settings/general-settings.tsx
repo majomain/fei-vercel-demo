@@ -19,7 +19,7 @@ export function GeneralSettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Company Information</CardTitle>
+          <CardTitle>Company Information</CardTitle> {/* Updated from Organization Information */}
           <CardDescription>Basic information about your company and facility.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

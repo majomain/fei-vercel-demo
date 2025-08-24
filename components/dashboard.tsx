@@ -5,8 +5,6 @@ import { useState, useCallback } from "react"
 import { EquipmentStatus } from "./equipment-status"
 import { EquipmentCycleTracking } from "./equipment-cycle-tracking"
 import { SensorInsights } from "./sensor-insights"
-import { EquipmentHealthScore } from "./equipment-health-score"
-
 import { EnergyUsageSummary } from "./energy-usage-summary"
 
 
@@ -26,11 +24,11 @@ export default function Dashboard() {
     return (
     <div className="space-y-6">
       <div className="space-y-6 min-h-0 mb-16">
-        {/* Overview Page Title */}
+        {/* Dashboard Page Title */}
         <div className="w-full">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
+              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
               <p className="text-muted-foreground">
                 Comprehensive view of your equipment performance and system status
               </p>
@@ -38,13 +36,14 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Equipment Health Score - Full Width */}
-        <div className="w-full">
-          <EquipmentHealthScore
-            sharedMaintenanceEvents={sharedMaintenanceEvents}
-            onMaintenanceEventUpdate={handleMaintenanceEventUpdate}
-            liveSensorData={liveSensorData}
-          />
+        {/* Equipment Status and Cycle Tracking - Moved to top */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="w-full">
+            <EquipmentStatus />
+          </div>
+          <div className="w-full">
+            <EquipmentCycleTracking />
+          </div>
         </div>
 
         {/* Sensor Insights - Full Width */}
@@ -55,16 +54,6 @@ export default function Dashboard() {
         {/* Energy Usage Summary - Full Width */}
         <div className="w-full">
           <EnergyUsageSummary />
-        </div>
-
-        {/* Equipment Status and Cycle Tracking - Responsive Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="w-full">
-            <EquipmentStatus />
-          </div>
-          <div className="w-full">
-            <EquipmentCycleTracking />
-          </div>
         </div>
       </div>
     </div>
