@@ -9,15 +9,7 @@ import { ThemeToggle } from "./theme-toggle"
 // import { useCompany } from "@/contexts/company-context"
 import Image from "next/image"
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -140,7 +132,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
   return (
     <div className="min-h-screen w-full dashboard-layout">
       {/* Full-width header at the top */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background z-20 sticky top-0 shadow-sm">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background z-30 sticky top-0 shadow-sm">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <button
             onClick={() => router.push("/")}
@@ -215,36 +207,36 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
 
       {/* Content area with sidebar and main content */}
       <div className="flex min-h-[calc(100vh-4rem)] w-full">
-        <SidebarProvider>
-          <Sidebar className="shrink-0 border-r bg-muted/30">
-            <SidebarContent className="pt-6 px-3">
-              <SidebarMenu>
+        {/* Custom sidebar to fix positioning issue */}
+        <div className="relative w-64 shrink-0">
+          <div className="fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] bg-muted/30 border-r overflow-y-auto z-20">
+            <div className="pt-6 px-3">
+              <nav className="space-y-1">
                 {navigationItems.map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton
-                      onClick={() => handleNavigation(item.id)}
-                      isActive={activeItem === item.id}
-                      className="w-full justify-start"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavigation(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeItem === item.id
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground border border-sidebar-border'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </button>
                 ))}
-              </SidebarMenu>
-            </SidebarContent>
-          </Sidebar>
-          
-          {/* Mobile sidebar trigger */}
-          <SidebarTrigger className="fixed top-20 left-4 z-30 lg:hidden" />
-
-          {/* Main content area - fixed for proper scrolling */}
-          <div className="flex-1 min-w-0">
-            <main className="min-h-full overflow-y-auto overflow-x-hidden">
-              <div className="p-6 pb-12 w-full max-w-none">{children}</div>
-            </main>
+              </nav>
+            </div>
           </div>
-        </SidebarProvider>
+        </div>
+
+        {/* Main content area - fixed for proper scrolling */}
+        <div className="flex-1 min-w-0">
+          <main className="min-h-full overflow-y-auto overflow-x-hidden">
+            <div className="p-6 pb-12 w-full max-w-none">{children}</div>
+          </main>
+        </div>
       </div>
 
       {showOnboarding && (

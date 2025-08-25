@@ -99,6 +99,8 @@
     @apply grid gap-4 w-full;
     grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   }
+  
+
 
   .dashboard-grid-2 {
     @apply grid gap-4 w-full;
