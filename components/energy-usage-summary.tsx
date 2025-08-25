@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from "recharts"
 import { Zap, Calendar, TrendingUp } from "lucide-react"
 import { equipmentData } from "./equipment-list"
@@ -13,6 +14,8 @@ interface EnergyDataPoint {
   currentMonth: number
   previousMonth?: number
   rateTier?: 'on-peak' | 'mid-peak' | 'off-peak' | 'super-off-peak'
+  currentMonthDollars?: number
+  previousMonthDollars?: number
 }
 
 interface AssetCost {
@@ -25,8 +28,9 @@ interface AssetCost {
 
 export function EnergyUsageSummary() {
   const [selectedAsset, setSelectedAsset] = useState("all")
-  const [granularity, setGranularity] = useState<"24hours" | "monthly" | "yearly">("24hours")
+  const [granularity, setGranularity] = useState<"24hours" | "daily" | "monthly">("24hours")
   const [showPreviousMonth, setShowPreviousMonth] = useState(false)
+  const [displayMode, setDisplayMode] = useState<"kWh" | "dollars">("kWh")
   const [energyData, setEnergyData] = useState<EnergyDataPoint[]>([])
   const [assetCosts, setAssetCosts] = useState<AssetCost[]>([])
 
@@ -84,44 +88,55 @@ export function EnergyUsageSummary() {
         data.push({
           period: `${hour.toString().padStart(2, '0')}:00`,
           currentMonth: isPastHour ? Math.max(0, hourlyUsage) : 0,
-          previousMonth: showPreviousMonth && isPastHour ? Math.max(0, previousDayUsage) : 0,
-          rateTier: isPastHour ? rateTier : undefined
+          previousMonth: showPreviousMonth ? Math.max(0, previousDayUsage) : 0, // Always populate previous day data
+          rateTier: isPastHour ? rateTier : undefined,
+          currentMonthDollars: isPastHour ? Math.max(0, hourlyUsage) * 0.057 : 0,
+          previousMonthDollars: showPreviousMonth ? Math.max(0, previousDayUsage) * 0.057 : 0
         })
       }
-    } else if (granularity === "monthly") {
-      // Monthly data for current year
+    } else if (granularity === "daily") {
+      // Daily data for current month
       const currentMonthNum = today.getMonth()
+      const currentYearNum = today.getFullYear()
+      const daysInMonth = new Date(currentYearNum, currentMonthNum + 1, 0).getDate()
+      const currentDay = today.getDate()
       
-      for (let month = 0; month <= currentMonthNum; month++) {
+      for (let day = 1; day <= daysInMonth; day++) {
+        const baseUsage = selectedAsset === "all" 
+          ? equipmentData.reduce((sum, eq) => sum + (50 + Math.random() * 30), 0)
+          : 50 + Math.random() * 30
+        
+        const dailyUsage = baseUsage + Math.sin(day / 15) * 10 + (Math.random() * 20 - 10)
+        const previousMonthUsage = baseUsage + Math.sin(day / 15) * 8 + (Math.random() * 16 - 8)
+        
+        // Only show data for days that have passed, leave future days blank
+        const isPastDay = day <= currentDay
+        
+        data.push({
+          period: day.toString(),
+          currentMonth: isPastDay ? Math.max(0, dailyUsage) : 0,
+          previousMonth: showPreviousMonth ? Math.max(0, previousMonthUsage) : 0, // Always populate previous month data
+          currentMonthDollars: isPastDay ? Math.max(0, dailyUsage) * 0.057 : 0,
+          previousMonthDollars: showPreviousMonth ? Math.max(0, previousMonthUsage) * 0.057 : 0
+        })
+      }
+    } else {
+      // Monthly data for current year - show all 12 months
+      for (let month = 0; month < 12; month++) {
         const baseUsage = selectedAsset === "all" 
           ? equipmentData.reduce((sum, eq) => sum + (1500 + Math.random() * 900), 0)
           : 1500 + Math.random() * 900
         
-        const monthlyUsage = baseUsage + Math.sin(month / 3) * 300 + (Math.random() * 600 - 300)
+        const isPastMonth = month <= today.getMonth()
+        const monthlyUsage = isPastMonth ? baseUsage + Math.sin(month / 3) * 300 + (Math.random() * 600 - 300) : 0
         const previousYearUsage = baseUsage + Math.sin(month / 3) * 240 + (Math.random() * 450 - 225)
         
         data.push({
           period: new Date(currentYear, month).toLocaleDateString('en-US', { month: 'short' }),
           currentMonth: Math.max(0, monthlyUsage),
-          previousMonth: showPreviousMonth ? Math.max(0, previousYearUsage) : 0
-        })
-      }
-    } else {
-      // Yearly data for multiple years
-      const currentYearNum = today.getFullYear()
-      
-      for (let year = currentYearNum - 2; year <= currentYearNum; year++) {
-        const baseUsage = selectedAsset === "all" 
-          ? equipmentData.reduce((sum, eq) => sum + (18000 + Math.random() * 12000), 0)
-          : 18000 + Math.random() * 12000
-        
-        const yearlyUsage = baseUsage + Math.sin(year / 2) * 3000 + (Math.random() * 6000 - 3000)
-        const previousYearUsage = baseUsage + Math.sin((year - 1) / 2) * 2400 + (Math.random() * 4500 - 2250)
-        
-        data.push({
-          period: year.toString(),
-          currentMonth: Math.max(0, yearlyUsage),
-          previousMonth: showPreviousMonth ? Math.max(0, previousYearUsage) : 0
+          previousMonth: showPreviousMonth ? Math.max(0, previousYearUsage) : 0, // Always populate previous year data
+          currentMonthDollars: Math.max(0, monthlyUsage) * 0.057,
+          previousMonthDollars: showPreviousMonth ? Math.max(0, previousYearUsage) * 0.057 : 0
         })
       }
     }
@@ -148,16 +163,44 @@ export function EnergyUsageSummary() {
     setAssetCosts(costs)
   }, [])
 
-  // Calculate totals for current month
+  // Calculate totals for current month and percentage changes
   const totals = useMemo(() => {
     const totalUsage = energyData.reduce((sum, d) => sum + (d.currentMonth || 0), 0)
     const avgUsage = energyData.length > 0 ? totalUsage / energyData.length : 0
     
+    // Calculate previous period totals for comparison
+    const previousTotalUsage = energyData.reduce((sum, d) => sum + (d.previousMonth || 0), 0)
+    const previousAvgUsage = energyData.length > 0 ? previousTotalUsage / energyData.length : 0
+    
+    // Calculate dollar totals
+    const totalDollars = energyData.reduce((sum, d) => sum + (d.currentMonthDollars || 0), 0)
+    const avgDollars = energyData.length > 0 ? totalDollars / energyData.length : 0
+    const previousTotalDollars = energyData.reduce((sum, d) => sum + (d.previousMonthDollars || 0), 0)
+    const previousAvgDollars = energyData.length > 0 ? previousTotalDollars / energyData.length : 0
+    
+    // Calculate percentage changes
+    const totalUsageChange = previousTotalUsage > 0 
+      ? ((totalUsage - previousTotalUsage) / previousTotalUsage) * 100 
+      : 0
+    
+    const avgUsageChange = previousAvgUsage > 0 
+      ? ((avgUsage - previousAvgUsage) / previousAvgUsage) * 100 
+      : 0
+    
     return {
       totalUsage,
       avgUsage,
+      totalDollars,
+      avgDollars,
+      previousTotalUsage,
+      previousAvgUsage,
+      previousTotalDollars,
+      previousAvgDollars,
+      totalUsageChange,
+      avgUsageChange,
+      hasPreviousData: previousTotalUsage > 0
     }
-  }, [energyData])
+  }, [energyData, showPreviousMonth])
 
   const CustomChartLegend = ({ payload }: any) => {
     return (
@@ -165,45 +208,97 @@ export function EnergyUsageSummary() {
         {payload.map((entry: any, index: number) => {
           const { value } = entry;
           
-          // Only render legend items for the date series (currentMonth and previousMonth)
-          if (value.includes("Sun,")) {
-            // Today's data - black stroke
-            return (
-              <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
-                <span
-                  style={{
-                    border: '2px solid black',
-                    backgroundColor: 'transparent',
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '4px',
-                    display: 'inline-block',
-                    marginRight: '8px',
-                    verticalAlign: 'middle'
-                  }}
-                ></span>
-                {value}
-              </li>
-            );
-          } else if (value.includes("Sat,")) {
-            // Previous day data - grey stroke
-            return (
-              <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
-                <span
-                  style={{
-                    border: '2px solid hsl(var(--muted-foreground))',
-                    backgroundColor: 'transparent',
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '4px',
-                    display: 'inline-block',
-                    marginRight: '8px',
-                    verticalAlign: 'middle'
-                  }}
-                ></span>
-                {value}
-              </li>
-            );
+          if (granularity === "24hours") {
+            // Hourly view - show date-specific legend with strokes
+            if (value.includes("Sun,")) {
+              // Today's data - black stroke
+              return (
+                <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
+                  <span
+                    style={{
+                      border: '2px solid black',
+                      backgroundColor: 'transparent',
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '4px',
+                      display: 'inline-block',
+                      marginRight: '8px',
+                      verticalAlign: 'middle'
+                    }}
+                  ></span>
+                  {value}
+                </li>
+              );
+            } else if (value.includes("Sat,")) {
+              // Previous day data - grey stroke
+              return (
+                <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
+                  <span
+                    style={{
+                      border: '2px solid hsl(var(--muted-foreground))',
+                      backgroundColor: 'transparent',
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '4px',
+                      display: 'inline-block',
+                      marginRight: '8px',
+                      verticalAlign: 'middle'
+                    }}
+                  ></span>
+                  {value}
+                </li>
+              );
+            }
+          } else {
+            // Daily and Monthly views - show generic period legend with fills
+            if (value.includes("Current")) {
+              return (
+                <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
+                  <span
+                    style={{
+                      backgroundColor: 'black',
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '4px',
+                      display: 'inline-block',
+                      marginRight: '8px',
+                      verticalAlign: 'middle'
+                    }}
+                  ></span>
+                  {granularity === "daily" ? (() => {
+                    const today = new Date()
+                    return today.toLocaleDateString('en-US', { month: 'short' })
+                  })() : granularity === "monthly" ? (() => {
+                    const today = new Date()
+                    return today.getFullYear().toString()
+                  })() : "Current Period"}
+                </li>
+              );
+            } else if (value.includes("Previous")) {
+              return (
+                <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
+                  <span
+                    style={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '4px',
+                      display: 'inline-block',
+                      marginRight: '8px',
+                      verticalAlign: 'middle'
+                    }}
+                  ></span>
+                  {granularity === "daily" ? (() => {
+                    const today = new Date()
+                    const previousMonth = new Date(today.getFullYear(), today.getMonth() - 1)
+                    return previousMonth.toLocaleDateString('en-US', { month: 'short' })
+                  })() : granularity === "monthly" ? (() => {
+                    const today = new Date()
+                    return (today.getFullYear() - 1).toString()
+                  })() : "Previous Period"}
+                </li>
+              );
+            }
           }
           return null;
         })}
@@ -223,24 +318,30 @@ export function EnergyUsageSummary() {
               Rate Tier: <span className="font-medium capitalize">{data.rateTier.replace('-', ' ')}</span>
             </p>
           )}
-          <p className="text-sm text-muted-foreground">
-            {granularity === "24hours" ? (
-              <>
-                {(() => {
-                  const today = new Date()
-                  const dayName = today.toLocaleDateString('en-US', { weekday: 'short' })
-                  const day = today.getDate()
-                  const month = today.toLocaleDateString('en-US', { month: 'short' })
-                  return `${dayName}, ${day} ${month}`
-                })()}: <span className="font-medium">{data.currentMonth?.toFixed(1) || 'No data'} kWh</span>
-              </>
-            ) : (
-              <>
-                Current Period: <span className="font-medium">{data.currentMonth?.toFixed(1) || 'No data'} kWh</span>
-              </>
-            )}
-          </p>
-          {data.previousMonth && (
+          {data.currentMonth > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {granularity === "24hours" ? (
+                <>
+                  {(() => {
+                    const today = new Date()
+                    const dayName = today.toLocaleDateString('en-US', { weekday: 'short' })
+                    const day = today.getDate()
+                    const month = today.toLocaleDateString('en-US', { month: 'short' })
+                    return `${dayName}, ${day} ${month}`
+                  })()}: <span className="font-medium">
+                    {displayMode === "kWh" ? `${data.currentMonth.toFixed(1)} kWh` : `$${data.currentMonthDollars?.toFixed(2)}`}
+                  </span>
+                </>
+              ) : (
+                <>
+                  Current Period: <span className="font-medium">
+                    {displayMode === "kWh" ? `${data.currentMonth.toFixed(1)} kWh` : `$${data.currentMonthDollars?.toFixed(2)}`}
+                  </span>
+                </>
+              )}
+            </p>
+          )}
+          {data.previousMonth && data.previousMonth > 0 && (
             <p className="text-sm text-muted-foreground">
               {granularity === "24hours" ? (
                 <>
@@ -251,11 +352,15 @@ export function EnergyUsageSummary() {
                     const day = yesterday.getDate()
                     const month = yesterday.toLocaleDateString('en-US', { month: 'short' })
                     return `${dayName}, ${day} ${month}`
-                  })()}: <span className="font-medium">{data.previousMonth.toFixed(1)} kWh</span>
+                  })()}: <span className="font-medium">
+                    {displayMode === "kWh" ? `${data.previousMonth.toFixed(1)} kWh` : `$${data.previousMonthDollars?.toFixed(2)}`}
+                  </span>
                 </>
               ) : (
                 <>
-                  Previous Period: <span className="font-medium">{data.previousMonth.toFixed(1)} kWh</span>
+                  Previous Period: <span className="font-medium">
+                    {displayMode === "kWh" ? `${data.previousMonth.toFixed(1)} kWh` : `$${data.previousMonthDollars?.toFixed(2)}`}
+                  </span>
                 </>
               )}
             </p>
@@ -291,16 +396,27 @@ export function EnergyUsageSummary() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={granularity} onValueChange={(value: "24hours" | "monthly" | "yearly") => setGranularity(value)}>
+            <Select value={granularity} onValueChange={(value: "24hours" | "daily" | "monthly") => setGranularity(value)}>
               <SelectTrigger className="w-full sm:w-[120px]">
                 <SelectValue placeholder="Granularity" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="24hours">24 Hours</SelectItem>
+                <SelectItem value="24hours">Hourly</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="yearly">Yearly</SelectItem>
               </SelectContent>
             </Select>
+            
+            {/* Display Mode Toggle */}
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-muted-foreground">kWh</span>
+              <Switch
+                checked={displayMode === "dollars"}
+                onCheckedChange={(checked: boolean) => setDisplayMode(checked ? "dollars" : "kWh")}
+                className="data-[state=checked]:bg-blue-600"
+              />
+              <span className="text-xs text-muted-foreground">$</span>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -310,42 +426,106 @@ export function EnergyUsageSummary() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="bg-blue-50">
               <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Zap className="h-4 w-4 text-blue-500" />
-                  <div className="flex-1">
-                    <p className="text-xs text-blue-600 font-medium">
-                      {granularity === "24hours" ? "Daily Total Usage" :
-                       granularity === "monthly" ? "Monthly Total Usage" :
-                       "Yearly Total Usage"}
-                    </p>
-                    <p className="text-lg font-bold">{totals.totalUsage.toFixed(0)} kWh</p>
-                    <p className="text-sm text-blue-700 font-medium">
-                      ${(totals.totalUsage * 0.057).toFixed(2)}
-                    </p>
-                  </div>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs text-blue-600 font-medium">
+                    {granularity === "24hours" ? "Daily Total Usage" :
+                     granularity === "daily" ? "Monthly Total Usage" :
+                     "Yearly Total Usage"}
+                  </p>
+                  {totals.hasPreviousData && (
+                    <span 
+                      className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        totals.totalUsageChange <= 0 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-green-700'
+                      }`}
+                    >
+                      {totals.totalUsageChange > 0 ? '+' : ''}{totals.totalUsageChange.toFixed(1)}%
+                    </span>
+                  )}
                 </div>
+                <p className="text-lg font-bold">
+                  {displayMode === "kWh" ? `${totals.totalUsage.toFixed(0)} kWh` : `$${totals.totalDollars.toFixed(2)}`}
+                </p>
+                {displayMode === "kWh" && (
+                  <p className="text-base text-foreground">
+                    ${(totals.totalUsage * 0.057).toFixed(2)}
+                  </p>
+                )}
+                
+                {/* Previous Period Data - Only show when enabled */}
+                {showPreviousMonth && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {granularity === "24hours" ? "Previous Day" :
+                       granularity === "daily" ? "Previous Month" :
+                       "Previous Year"}
+                    </p>
+                                      <p className="text-sm font-semibold text-muted-foreground">
+                    {displayMode === "kWh" ? `${totals.previousTotalUsage.toFixed(0)} kWh` : `$${totals.previousTotalDollars.toFixed(2)}`}
+                  </p>
+                  {displayMode === "kWh" && (
+                    <p className="text-xs text-muted-foreground">
+                      ${(totals.previousTotalUsage * 0.057).toFixed(2)}
+                    </p>
+                  )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             <Card className="bg-green-50">
               <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  <div className="flex-1">
-                    <p className="text-xs text-green-600 font-medium">
-                      {granularity === "24hours" ? "Average Usage Per Hour" :
-                       granularity === "monthly" ? "Average Usage Per Month" :
-                       "Average Usage Per Year"}
-                    </p>
-                    <p className="text-lg font-bold">{totals.avgUsage.toFixed(1)} kWh</p>
-                    <p className="text-sm text-green-700 font-medium">
-                      ${(totals.avgUsage * 0.057).toFixed(2)}
-                    </p>
-                  </div>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs text-green-600 font-medium">
+                    {granularity === "24hours" ? "Average Usage Per Hour" :
+                     granularity === "daily" ? "Average Usage Per Day" :
+                     "Average Usage Per Month"}
+                  </p>
+                  {totals.hasPreviousData && (
+                    <span 
+                      className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        totals.avgUsageChange <= 0 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {totals.avgUsageChange > 0 ? '+' : ''}{totals.avgUsageChange.toFixed(1)}%
+                    </span>
+                  )}
                 </div>
+                <p className="text-lg font-bold">
+                  {displayMode === "kWh" ? `${totals.avgUsage.toFixed(1)} kWh` : `$${totals.avgDollars.toFixed(2)}`}
+                </p>
+                {displayMode === "kWh" && (
+                  <p className="text-base text-foreground">
+                    ${(totals.avgUsage * 0.057).toFixed(2)}
+                  </p>
+                )}
+                
+                {/* Previous Period Data - Only show when enabled */}
+                {showPreviousMonth && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {granularity === "24hours" ? "Previous Day" :
+                       granularity === "daily" ? "Previous Month" :
+                       "Previous Year"}
+                    </p>
+                                      <p className="text-sm font-semibold text-muted-foreground">
+                    {displayMode === "kWh" ? `${totals.previousAvgUsage.toFixed(1)} kWh` : `$${totals.previousAvgDollars.toFixed(2)}`}
+                  </p>
+                  {displayMode === "kWh" && (
+                    <p className="text-xs text-muted-foreground">
+                      ${(totals.previousAvgUsage * 0.057).toFixed(2)}
+                    </p>
+                  )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
+
+
 
           {/* Previous Period Toggle */}
           <div className="flex items-center justify-between">
@@ -360,7 +540,7 @@ export function EnergyUsageSummary() {
               />
               <label htmlFor="showPreviousMonth" className="text-sm text-muted-foreground">
                 {granularity === "24hours" ? "Show Previous Day" : 
-                 granularity === "monthly" ? "Show Previous Month" : 
+                 granularity === "daily" ? "Show Previous Month" : 
                  "Show Previous Year"}
               </label>
             </div>
@@ -372,21 +552,21 @@ export function EnergyUsageSummary() {
               <BarChart data={energyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="period" />
-                <YAxis label={{ value: "Energy Usage (kWh)", angle: -90, position: "insideLeft" }} />
+                <YAxis label={{ value: displayMode === "kWh" ? "Usage (kWh)" : "Cost ($)", angle: -90, position: "insideLeft" }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend content={<CustomChartLegend />} />
                 <Bar
-                  dataKey="currentMonth"
-                  fill="transparent"
-                  stroke="black"
+                  dataKey={displayMode === "kWh" ? "currentMonth" : "currentMonthDollars"}
+                  fill={granularity === "24hours" ? "transparent" : "black"}
+                  stroke={granularity === "24hours" ? "black" : "none"}
                   strokeWidth={2}
-                  name={(() => {
+                  name={granularity === "24hours" ? (() => {
                     const today = new Date()
                     const dayName = today.toLocaleDateString('en-US', { weekday: 'short' })
                     const day = today.getDate()
                     const month = today.toLocaleDateString('en-US', { month: 'short' })
                     return `${dayName}, ${day} ${month}`
-                  })()}
+                  })() : "Current Period"}
                 >
                   {granularity === "24hours" && energyData.map((entry, index) => (
                     <Cell
@@ -405,18 +585,18 @@ export function EnergyUsageSummary() {
                 </Bar>
                 {showPreviousMonth && (
                   <Bar
-                    dataKey="previousMonth"
-                    fill="transparent"
-                    stroke="hsl(var(--muted-foreground))"
+                    dataKey={displayMode === "kWh" ? "previousMonth" : "previousMonthDollars"}
+                    fill={granularity === "24hours" ? "transparent" : "rgba(0, 0, 0, 0.3)"}
+                    stroke={granularity === "24hours" ? "hsl(var(--muted-foreground))" : "none"}
                     strokeWidth={2}
-                    name={(() => {
+                    name={granularity === "24hours" ? (() => {
                       const yesterday = new Date()
                       yesterday.setDate(yesterday.getDate() - 1)
                       const dayName = yesterday.toLocaleDateString('en-US', { weekday: 'short' })
                       const day = yesterday.getDate()
                       const month = yesterday.toLocaleDateString('en-US', { month: 'short' })
                       return `${dayName}, ${day} ${month}`
-                    })()}
+                    })() : "Previous Period"}
                   />
                 )}
               </BarChart>
@@ -447,6 +627,8 @@ export function EnergyUsageSummary() {
               </div>
             </div>
           )}
+
+
 
           {/* Asset Cost Breakdown */}
           {selectedAsset === "all" && (
