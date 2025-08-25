@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, AlertCircle, MoreHorizontal, Thermometer, Activity, Waves, Droplets, Zap } from "lucide-react"
+import { Search, AlertCircle, MoreHorizontal, Thermometer, Activity, Zap } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,9 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SensorData } from "@/components/sensor-data"
 import { EditEquipmentForm } from "@/components/edit-equipment-form"
-import { EquipmentHistory } from "@/components/equipment-history"
 import { generateEquipmentReport } from "@/lib/generate-report"
 import type { Equipment } from "@/lib/equipment"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
@@ -506,11 +504,11 @@ export function EquipmentList({ onEquipmentSelect }: { onEquipmentSelect?: (equi
                               case "temperature":
                                 return <Thermometer className="h-4 w-4" />
                               case "humidity":
-                                return <Droplets className="h-4 w-4" />
+                                return <Activity className="h-4 w-4" />
                               case "current":
                                 return <Activity className="h-4 w-4" />
                               case "vibration":
-                                return <Waves className="h-4 w-4" />
+                                return <Activity className="h-4 w-4" />
                               default:
                                 return <Zap className="h-4 w-4" />
                             }
@@ -601,7 +599,9 @@ export function EquipmentList({ onEquipmentSelect }: { onEquipmentSelect?: (equi
                 <EquipmentOverview equipment={selectedEquipment} />
               </TabsContent>
               <TabsContent value="sensors" className="overflow-auto max-h-[70vh]">
-                <SensorData equipment={selectedEquipment} />
+                <div className="p-4 text-center text-muted-foreground">
+                  Sensor data view removed - use Sensor Insights component instead
+                </div>
               </TabsContent>
               <TabsContent value="maintenance" className="overflow-auto max-h-[70vh]">
                 <MaintenanceSchedule equipment={selectedEquipment} />
@@ -633,7 +633,9 @@ export function EquipmentList({ onEquipmentSelect }: { onEquipmentSelect?: (equi
             <DialogHeader>
               <DialogTitle>Equipment History</DialogTitle>
             </DialogHeader>
-            <EquipmentHistory equipment={selectedEquipment} />
+            <div className="p-4 text-center text-muted-foreground">
+              Equipment history view removed - use Maintenance Schedule component instead
+            </div>
           </DialogContent>
           </Dialog>
         </div>

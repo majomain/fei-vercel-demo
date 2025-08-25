@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { LayoutDashboard, Settings, Wrench, Box, Database, Plus, LogOut, Activity } from "lucide-react"
 import { NotificationsDropdown } from "./notifications-dropdown"
 import { ThemeToggle } from "./theme-toggle"
-// import { useCompany } from "@/contexts/company-context"
+
 import Image from "next/image"
 
 
@@ -32,7 +32,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
   const router = useRouter()
   const pathname = usePathname()
 
-  // const { currentCompany, companies, setCurrentCompany } = useCompany()
+
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showUserProfile, setShowUserProfile] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -194,14 +194,7 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {/* Temporarily disabled CompanySelector
-          <CompanySelector
-            // currentCompany={currentCompany}
-            // companies={companies}
-            // onCompanyChange={setCurrentCompany}
-            onViewAllCompanies={handleViewAllCompanies}
-          />
-          */}
+
         </div>
       </header>
 

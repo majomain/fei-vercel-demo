@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { LayoutWrapper } from "@/components/layout-wrapper"
+import DashboardLayout from "@/components/dashboard-layout"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,9 +23,9 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
       </head>
       <body className={inter.className}>
-        <LayoutWrapper>
+        <DashboardLayout>
           {children}
-        </LayoutWrapper>
+        </DashboardLayout>
       </body>
     </html>
   )
