@@ -147,21 +147,36 @@ export function EnergyUsageSummary() {
   // Calculate asset costs
   useEffect(() => {
     const costs: AssetCost[] = equipmentData.map((equipment) => {
-      const monthlyUsage = 800 + Math.random() * 400 // kWh per month
+      let usage: number
+      let cost: number
+      
+      if (granularity === "24hours") {
+        // Daily usage for hourly view
+        usage = 30 + Math.random() * 20 // kWh per day
+        cost = usage * 0.057 // Daily cost
+      } else if (granularity === "daily") {
+        // Monthly usage for daily view
+        usage = 800 + Math.random() * 400 // kWh per month
+        cost = usage * 0.057 // Monthly cost
+      } else {
+        // Yearly usage for monthly view
+        usage = 9600 + Math.random() * 4800 // kWh per year
+        cost = usage * 0.057 // Yearly cost
+      }
+      
       const rate = energyRates[equipment.type as keyof typeof energyRates] || 0.11
-      const monthlyCost = monthlyUsage * rate
 
       return {
         id: `equipment${equipment.id}`,
         name: equipment.name,
-        usage: monthlyUsage,
-        cost: monthlyCost,
+        usage: usage,
+        cost: cost,
         rate,
       }
     })
 
     setAssetCosts(costs)
-  }, [])
+  }, [granularity, equipmentData])
 
   // Calculate totals for current month and percentage changes
   const totals = useMemo(() => {
@@ -662,7 +677,11 @@ export function EnergyUsageSummary() {
                             <span className="font-medium">{asset.usage.toFixed(0)} kWh</span>
                           </div>
                           <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Monthly Cost:</span>
+                            <span className="text-muted-foreground">
+                              {granularity === "24hours" ? "Daily Cost:" :
+                               granularity === "daily" ? "Monthly Cost:" :
+                               "Yearly Cost:"}
+                            </span>
                             <span className="font-medium">${asset.cost.toFixed(2)}</span>
                           </div>
                         </div>
@@ -677,7 +696,11 @@ export function EnergyUsageSummary() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Calendar className="h-5 w-5 text-primary" />
-                      <span className="font-semibold">Total Monthly Cost (All Assets)</span>
+                      <span className="font-semibold">
+                        Total {granularity === "24hours" ? "Daily" :
+                               granularity === "daily" ? "Monthly" :
+                               "Yearly"} Cost (All Assets)
+                      </span>
                     </div>
                     <span className="text-xl font-bold text-primary">
                       ${assetCosts.reduce((sum, asset) => sum + asset.cost, 0).toFixed(2)}
