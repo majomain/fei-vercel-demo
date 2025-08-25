@@ -3,19 +3,15 @@
 import type React from "react"
 import { useState, useMemo, Suspense, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Settings, Wrench, Box, Database, Plus, LogOut, Activity, Grid3X3, User } from "lucide-react"
+import { LayoutDashboard, Settings, Wrench, Box, Database, Plus, LogOut, Activity } from "lucide-react"
 import { NotificationsDropdown } from "./notifications-dropdown"
 import { ThemeToggle } from "./theme-toggle"
-import { CompanySelector } from "./company-selector"
-import { SimpleCompanyDisplay } from "./simple-company-display"
 // import { useCompany } from "@/contexts/company-context"
-import { ArkimLogo } from "./arkim-logo"
 import Image from "next/image"
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -91,13 +87,8 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
     }
   }
 
-  const handleViewAllCompanies = () => {
-    router.push("/settings/locations")
-  }
-
   const handleLogout = () => {
     try {
-      console.log("[v0] Logout clicked")
       // Add actual logout logic here when ready
     } catch (error) {
       console.error("[v0] Logout error:", error)
@@ -186,7 +177,6 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  console.log("[v0] Settings dropdown trigger clicked")
                   setDropdownOpen(!dropdownOpen)
                 }}
               >
@@ -244,6 +234,9 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
               </SidebarMenu>
             </SidebarContent>
           </Sidebar>
+          
+          {/* Mobile sidebar trigger */}
+          <SidebarTrigger className="fixed top-20 left-4 z-30 lg:hidden" />
 
           {/* Main content area - fixed for proper scrolling */}
           <div className="flex-1 min-w-0">
