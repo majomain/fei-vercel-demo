@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Thermometer, Zap, Activity, Waves, AlertTriangle, CheckCircle, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { equipmentData } from "./equipment-list"
@@ -303,16 +304,26 @@ export function SensorInsights({ selectedEquipmentId }: { selectedEquipmentId?: 
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={selectedEquipment || sensorData[0]?.id} onValueChange={setSelectedEquipment}>
-          <TabsList className="mb-4 flex flex-nowrap overflow-x-auto pb-1">
-            {sensorData.map((equipment) => (
-              <TabsTrigger key={equipment.id} value={equipment.id} className="flex-shrink-0">
-                {equipment.name}
-                <Badge className={cn("ml-2", getBadgeColorClass(equipment.overallScore))}>
-                  {equipment.overallScore}
-                </Badge>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          {/* Asset Selection Dropdown */}
+          <div className="mb-4">
+            <Select value={selectedEquipment || sensorData[0]?.id} onValueChange={setSelectedEquipment}>
+              <SelectTrigger className="w-full max-w-md">
+                <SelectValue placeholder="Select an asset" />
+              </SelectTrigger>
+              <SelectContent>
+                {sensorData.map((equipment) => (
+                  <SelectItem key={equipment.id} value={equipment.id}>
+                    <div className="flex items-center justify-between w-full">
+                      <span>{equipment.name}</span>
+                      <Badge className={cn("ml-2", getBadgeColorClass(equipment.overallScore))}>
+                        {equipment.overallScore}
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {sensorData.map((equipment) => (
             <TabsContent key={equipment.id} value={equipment.id}>
