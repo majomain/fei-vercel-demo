@@ -10,6 +10,8 @@ import { CompanySelector } from "./company-selector"
 import { SimpleCompanyDisplay } from "./simple-company-display"
 // import { useCompany } from "@/contexts/company-context"
 import { ArkimLogo } from "./arkim-logo"
+import Image from "next/image"
+
 import {
   Sidebar,
   SidebarContent,
@@ -147,10 +149,20 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
   return (
     <div className="min-h-screen w-full dashboard-layout">
       {/* Full-width header at the top */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background z-10 sticky top-0">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background z-20 sticky top-0 shadow-sm">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <ArkimLogo className="h-8 w-8 text-primary" />
-          <h1 className="text-lg font-semibold truncate">Arkim Dashboard</h1>
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center justify-center hover:opacity-80 transition-opacity p-2"
+          >
+            <Image
+              src="/logo-blk-wht-01@4x.png"
+              alt="Home"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg"
+            />
+          </button>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button
@@ -214,15 +226,8 @@ function DashboardLayoutContent({ children, onAddEquipment }: DashboardLayoutPro
       {/* Content area with sidebar and main content */}
       <div className="flex min-h-[calc(100vh-4rem)] w-full">
         <SidebarProvider>
-          <Sidebar className="shrink-0">
-            <SidebarHeader>
-              <div className="flex items-center gap-2 px-2 py-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <LayoutDashboard className="h-4 w-4" />
-                </div>
-              </div>
-            </SidebarHeader>
-            <SidebarContent>
+          <Sidebar className="shrink-0 border-r bg-muted/30">
+            <SidebarContent className="pt-6 px-3">
               <SidebarMenu>
                 {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.id}>

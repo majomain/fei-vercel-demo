@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
+
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from "recharts"
 import { Zap, Calendar, TrendingUp } from "lucide-react"
 import { equipmentData } from "./equipment-list"
@@ -408,14 +408,27 @@ export function EnergyUsageSummary() {
             </Select>
             
             {/* Display Mode Toggle */}
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-muted-foreground">kWh</span>
-              <Switch
-                checked={displayMode === "dollars"}
-                onCheckedChange={(checked: boolean) => setDisplayMode(checked ? "dollars" : "kWh")}
-                className="data-[state=checked]:bg-blue-600"
-              />
-              <span className="text-xs text-muted-foreground">$</span>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => setDisplayMode("kWh")}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  displayMode === "kWh"
+                    ? "bg-foreground text-background"
+                    : "text-foreground hover:text-muted-foreground"
+                }`}
+              >
+                kWh
+              </button>
+              <button
+                onClick={() => setDisplayMode("dollars")}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  displayMode === "dollars"
+                    ? "bg-foreground text-background"
+                    : "text-foreground hover:text-muted-foreground"
+                }`}
+              >
+                $
+              </button>
             </div>
           </div>
         </div>
