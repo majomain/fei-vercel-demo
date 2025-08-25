@@ -10,12 +10,7 @@ import {
   CalendarIcon,
   ArrowUp,
   ArrowDown,
-  Settings,
   Wrench,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
 } from "lucide-react"
 import {
   format,
@@ -144,27 +139,7 @@ export default function MaintenancePage() {
 
   const getCalendarDays = () => eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) })
 
-  /* ----- statistics ----- */
-  const stats = useMemo(() => {
-    let scheduled = 0,
-      inProgress = 0,
-      completed = 0,
-      overdue = 0
-    maintenanceEvents.forEach((event) => {
-      const eventDate = new Date(event.date)
-      const isEventOverdue = event.status !== "completed" && isPast(eventDate) && !isToday(eventDate)
-      if (isEventOverdue) overdue++
-      else if (event.status === "pending") scheduled++
-      else if (event.status === "completed") completed++
-    })
-    return {
-      scheduled,
-      inProgress,
-      completed,
-      overdue,
-      totalCost: maintenanceEvents.reduce((sum, event) => sum + event.cost, 0),
-    }
-  }, [maintenanceEvents])
+
 
   /* ----- CRUD & EVENT HANDLERS ----- */
   const handleSaveEvent = (eventData: Omit<MaintenanceEvent, "id">) => {
@@ -249,29 +224,7 @@ export default function MaintenancePage() {
           </CardContent>
         </Card>
 
-        {/* statistics */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Settings className="h-5 w-5 text-primary" />
-              Maintenance Statistics
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-              <StatCard count={stats.scheduled} label="Scheduled" Icon={Clock} color="blue" />
-              <StatCard count={stats.inProgress} label="In Progress" Icon={Wrench} color="orange" />
-              <StatCard count={stats.overdue} label="Overdue" Icon={AlertTriangle} color="red" />
-              <StatCard count={stats.completed} label="Completed" Icon={CheckCircle} color="green" />
-              <StatCard
-                count={`$${stats.totalCost.toLocaleString()}`}
-                label="Total Cost"
-                Icon={XCircle}
-                color="purple"
-              />
-            </div>
-          </CardContent>
-        </Card>
+
 
         {/* Maintenance Schedule Workflow - WORKING VERSION */}
         <Card>
@@ -310,30 +263,4 @@ export default function MaintenancePage() {
   )
 }
 
-/* ---------- small sub-component ---------- */
-function StatCard({
-  count,
-  label,
-  Icon,
-  color,
-}: {
-  count: number | string
-  label: string
-  Icon: FC<{ className?: string }>
-  color: "blue" | "orange" | "green" | "red" | "purple"
-}) {
-  const colorMap: Record<typeof color, string> = {
-    blue: "text-blue-600 bg-blue-50 dark:bg-blue-950/40",
-    orange: "text-orange-600 bg-orange-50 dark:bg-orange-950/40",
-    green: "text-green-600 bg-green-50 dark:bg-green-950/40",
-    red: "text-red-600 bg-red-50 dark:bg-red-950/40",
-    purple: "text-purple-600 bg-purple-50 dark:bg-purple-950/40",
-  }
-  return (
-    <div className={`rounded-lg border p-4 text-center ${colorMap[color]}`}>
-      <Icon className="mx-auto mb-2 h-8 w-8" />
-      <div className="text-2xl font-bold">{count}</div>
-      <div className="text-sm font-medium">{label}</div>
-    </div>
-  )
-}
+
