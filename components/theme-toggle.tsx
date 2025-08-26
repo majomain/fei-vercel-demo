@@ -17,11 +17,6 @@ export function ThemeToggle() {
 
   return (
     <div className="flex items-center gap-2">
-      {/* Debug info - remove this later */}
-      <div className="text-xs text-muted-foreground hidden sm:block">
-        {theme} / {resolvedTheme}
-      </div>
-      
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon">
