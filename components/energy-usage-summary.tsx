@@ -6,8 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from "recharts"
-import { Zap, Calendar } from "lucide-react"
+import { Zap, Calendar, Settings } from "lucide-react"
 import { equipmentData } from "./equipment-list"
+import { useEnergyRates } from "@/contexts/energy-rates-context"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 
 interface EnergyDataPoint {
   period: string
@@ -27,6 +30,7 @@ interface AssetCost {
 }
 
 export function EnergyUsageSummary() {
+  const router = useRouter()
   const [selectedAsset, setSelectedAsset] = useState("all")
   const [granularity, setGranularity] = useState<"24hours" | "daily" | "monthly">("24hours")
   const [showPreviousMonth, setShowPreviousMonth] = useState(false)
@@ -34,14 +38,9 @@ export function EnergyUsageSummary() {
   const [energyData, setEnergyData] = useState<EnergyDataPoint[]>([])
   const [assetCosts, setAssetCosts] = useState<AssetCost[]>([])
 
-  // Energy rates per kWh for different equipment types
-  const energyRates = {
-    "Refrigeration Unit": 0.12,
-    "HVAC System": 0.1,
-    Compressor: 0.15,
-    "Conveyor Belt": 0.08,
-    "Packaging Machine": 0.11,
-  }
+  // Get configurable energy rates from context
+  const { rates } = useEnergyRates()
+  const energyRates = rates.equipmentRates
 
   // Generate energy usage data based on granularity
   useEffect(() => {
@@ -89,8 +88,8 @@ export function EnergyUsageSummary() {
           currentMonth: isPastHour ? Math.max(0, hourlyUsage) : 0,
           previousMonth: showPreviousMonth ? Math.max(0, previousDayUsage) : 0, // Always populate previous day data
           rateTier: isPastHour ? rateTier : undefined,
-          currentMonthDollars: isPastHour ? Math.max(0, hourlyUsage) * 0.057 : 0,
-          previousMonthDollars: showPreviousMonth ? Math.max(0, previousDayUsage) * 0.057 : 0
+          currentMonthDollars: isPastHour ? Math.max(0, hourlyUsage) * rates.touRates.offPeak : 0,
+          previousMonthDollars: showPreviousMonth ? Math.max(0, previousDayUsage) * rates.touRates.offPeak : 0
         })
       }
     } else if (granularity === "daily") {
@@ -115,8 +114,8 @@ export function EnergyUsageSummary() {
           period: day.toString(),
           currentMonth: isPastDay ? Math.max(0, dailyUsage) : 0,
           previousMonth: showPreviousMonth ? Math.max(0, previousMonthUsage) : 0, // Always populate previous month data
-          currentMonthDollars: isPastDay ? Math.max(0, dailyUsage) * 0.057 : 0,
-          previousMonthDollars: showPreviousMonth ? Math.max(0, previousMonthUsage) * 0.057 : 0
+          currentMonthDollars: isPastDay ? Math.max(0, dailyUsage) * rates.touRates.offPeak : 0,
+          previousMonthDollars: showPreviousMonth ? Math.max(0, previousMonthUsage) * rates.touRates.offPeak : 0
         })
       }
     } else {
@@ -134,8 +133,8 @@ export function EnergyUsageSummary() {
           period: new Date(currentYear, month).toLocaleDateString('en-US', { month: 'short' }),
           currentMonth: Math.max(0, monthlyUsage),
           previousMonth: showPreviousMonth ? Math.max(0, previousYearUsage) : 0, // Always populate previous year data
-          currentMonthDollars: Math.max(0, monthlyUsage) * 0.057,
-          previousMonthDollars: showPreviousMonth ? Math.max(0, previousYearUsage) * 0.057 : 0
+          currentMonthDollars: Math.max(0, monthlyUsage) * rates.touRates.offPeak,
+          previousMonthDollars: showPreviousMonth ? Math.max(0, previousYearUsage) * rates.touRates.offPeak : 0
         })
       }
     }
@@ -152,15 +151,15 @@ export function EnergyUsageSummary() {
       if (granularity === "24hours") {
         // Daily usage for hourly view
         usage = 30 + Math.random() * 20 // kWh per day
-        cost = usage * 0.057 // Daily cost
+        cost = usage * rates.touRates.offPeak // Daily cost
       } else if (granularity === "daily") {
         // Monthly usage for daily view
         usage = 800 + Math.random() * 400 // kWh per month
-        cost = usage * 0.057 // Monthly cost
+        cost = usage * rates.touRates.offPeak // Monthly cost
       } else {
         // Yearly usage for monthly view
         usage = 9600 + Math.random() * 4800 // kWh per year
-        cost = usage * 0.057 // Yearly cost
+        cost = usage * rates.touRates.offPeak // Yearly cost
       }
       
       const rate = energyRates[equipment.type as keyof typeof energyRates] || 0.11
@@ -457,6 +456,17 @@ export function EnergyUsageSummary() {
                 $
               </button>
             </div>
+            
+            {/* Quick Access to Energy Rates Configuration */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/settings#energy-rates')}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Energy Rates
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -489,7 +499,7 @@ export function EnergyUsageSummary() {
                 </p>
                 {displayMode === "kWh" && (
                   <p className="text-base text-foreground">
-                    ${(totals.totalUsage * 0.057).toFixed(2)}
+                    ${(totals.totalUsage * rates.touRates.offPeak).toFixed(2)}
                   </p>
                 )}
                 
@@ -506,7 +516,7 @@ export function EnergyUsageSummary() {
                   </p>
                   {displayMode === "kWh" && (
                     <p className="text-xs text-muted-foreground">
-                      ${(totals.previousTotalUsage * 0.057).toFixed(2)}
+                      ${(totals.previousTotalUsage * rates.touRates.offPeak).toFixed(2)}
                     </p>
                   )}
                   </div>
@@ -539,7 +549,7 @@ export function EnergyUsageSummary() {
                 </p>
                 {displayMode === "kWh" && (
                   <p className="text-base text-foreground">
-                    ${(totals.avgUsage * 0.057).toFixed(2)}
+                    ${(totals.avgUsage * rates.touRates.offPeak).toFixed(2)}
                   </p>
                 )}
                 
@@ -556,7 +566,7 @@ export function EnergyUsageSummary() {
                   </p>
                   {displayMode === "kWh" && (
                     <p className="text-xs text-muted-foreground">
-                      ${(totals.previousAvgUsage * 0.057).toFixed(2)}
+                      ${(totals.previousAvgUsage * rates.touRates.offPeak).toFixed(2)}
                     </p>
                   )}
                   </div>
@@ -637,19 +647,19 @@ export function EnergyUsageSummary() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded bg-red-500"></div>
-                  <span className="text-xs">On-Peak (Summer 4-9 PM)<br/>$0.056/kWh</span>
+                  <span className="text-xs">On-Peak (Summer 4-9 PM)<br/>${rates.touRates.onPeak.toFixed(3)}/kWh</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded bg-yellow-500"></div>
-                  <span className="text-xs">Mid-Peak (Winter 4-9 PM)<br/>$0.059/kWh</span>
+                  <span className="text-xs">Mid-Peak (Winter 4-9 PM)<br/>${rates.touRates.midPeak.toFixed(3)}/kWh</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded bg-green-500"></div>
-                  <span className="text-xs">Super Off-Peak (Winter 8 AM-4 PM)<br/>$0.056/kWh</span>
+                  <span className="text-xs">Super Off-Peak (Winter 8 AM-4 PM)<br/>${rates.touRates.superOffPeak.toFixed(3)}/kWh</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded bg-blue-500"></div>
-                  <span className="text-xs">Off-Peak (All other hours)<br/>$0.057/kWh</span>
+                  <span className="text-xs">Off-Peak (All other hours)<br/>${rates.touRates.offPeak.toFixed(3)}/kWh</span>
                 </div>
               </div>
             </div>

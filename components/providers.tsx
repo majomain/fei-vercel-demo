@@ -5,6 +5,7 @@ import type React from "react"
 import { SessionProvider } from "next-auth/react"
 import type { Session } from "next-auth"
 import { ThemeProvider } from "./theme-provider"
+import { EnergyRatesProvider } from "@/contexts/energy-rates-context"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -21,7 +22,9 @@ export function Providers({ children, session }: ProvidersProps) {
         disableTransitionOnChange={false}
         storageKey="arkim-theme"
       >
-        {children}
+        <EnergyRatesProvider>
+          {children}
+        </EnergyRatesProvider>
       </ThemeProvider>
     </SessionProvider>
   )
