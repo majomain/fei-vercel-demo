@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from "recharts"
-import { Zap, Calendar, TrendingUp } from "lucide-react"
+import { Zap, Calendar } from "lucide-react"
 import { equipmentData } from "./equipment-list"
 
 interface EnergyDataPoint {
@@ -55,7 +55,6 @@ export function EnergyUsageSummary() {
     if (granularity === "24hours") {
       // Full 24-hour view for current day
       const today = new Date()
-      const isWeekend = today.getDay() === 0 || today.getDay() === 6
       const isSummer = today.getMonth() >= 5 && today.getMonth() <= 8 // Jun-Sep
       
       for (let hour = 0; hour < 24; hour++) {
@@ -225,8 +224,14 @@ export function EnergyUsageSummary() {
           
           if (granularity === "24hours") {
             // Hourly view - show date-specific legend with strokes
-            if (value.includes("Sun,")) {
+            if (value.includes("Current")) {
               // Today's data - black stroke
+              const today = new Date()
+              const dayName = today.toLocaleDateString('en-US', { weekday: 'short' })
+              const day = today.getDate()
+              const month = today.toLocaleDateString('en-US', { month: 'short' })
+              const formattedDate = `${dayName} ${day} ${month}`
+              
               return (
                 <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
                   <span
@@ -241,11 +246,18 @@ export function EnergyUsageSummary() {
                       verticalAlign: 'middle'
                     }}
                   ></span>
-                  {value}
+                  {formattedDate}
                 </li>
               );
-            } else if (value.includes("Sat,")) {
+            } else if (value.includes("Previous")) {
               // Previous day data - grey stroke
+              const yesterday = new Date()
+              yesterday.setDate(yesterday.getDate() - 1)
+              const dayName = yesterday.toLocaleDateString('en-US', { weekday: 'short' })
+              const day = yesterday.getDate()
+              const month = yesterday.toLocaleDateString('en-US', { month: 'short' })
+              const formattedDate = `${dayName} ${day} ${month}`
+              
               return (
                 <li key={`legend-${index}`} className="flex items-center text-sm text-muted-foreground">
                   <span
@@ -260,7 +272,7 @@ export function EnergyUsageSummary() {
                       verticalAlign: 'middle'
                     }}
                   ></span>
-                  {value}
+                  {formattedDate}
                 </li>
               );
             }
@@ -416,9 +428,9 @@ export function EnergyUsageSummary() {
                 <SelectValue placeholder="Granularity" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="24hours">Hourly</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="24hours">Hour</SelectItem>
+                <SelectItem value="daily">Day</SelectItem>
+                <SelectItem value="monthly">Month</SelectItem>
               </SelectContent>
             </Select>
             
@@ -456,9 +468,9 @@ export function EnergyUsageSummary() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs text-blue-600 font-medium">
-                    {granularity === "24hours" ? "Daily Total Usage" :
-                     granularity === "daily" ? "Monthly Total Usage" :
-                     "Yearly Total Usage"}
+                    {granularity === "24hours" ? "Hour Total Usage" :
+                     granularity === "daily" ? "Day Total Usage" :
+                     "Month Total Usage"}
                   </p>
                   {totals.hasPreviousData && (
                     <span 
@@ -583,18 +595,21 @@ export function EnergyUsageSummary() {
                 <YAxis label={{ value: displayMode === "kWh" ? "Usage (kWh)" : "Cost ($)", angle: -90, position: "insideLeft" }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend content={<CustomChartLegend />} />
+                {showPreviousMonth && (
+                  <Bar
+                    dataKey={displayMode === "kWh" ? "previousMonth" : "previousMonthDollars"}
+                    fill={granularity === "24hours" ? "transparent" : "rgba(0, 0, 0, 0.3)"}
+                    stroke={granularity === "24hours" ? "hsl(var(--muted-foreground))" : "none"}
+                    strokeWidth={2}
+                    name="Previous Period"
+                  />
+                )}
                 <Bar
                   dataKey={displayMode === "kWh" ? "currentMonth" : "currentMonthDollars"}
                   fill={granularity === "24hours" ? "transparent" : "black"}
                   stroke={granularity === "24hours" ? "black" : "none"}
                   strokeWidth={2}
-                  name={granularity === "24hours" ? (() => {
-                    const today = new Date()
-                    const dayName = today.toLocaleDateString('en-US', { weekday: 'short' })
-                    const day = today.getDate()
-                    const month = today.toLocaleDateString('en-US', { month: 'short' })
-                    return `${dayName}, ${day} ${month}`
-                  })() : "Current Period"}
+                  name="Current Period"
                 >
                   {granularity === "24hours" && energyData.map((entry, index) => (
                     <Cell
@@ -611,22 +626,6 @@ export function EnergyUsageSummary() {
                     />
                   ))}
                 </Bar>
-                {showPreviousMonth && (
-                  <Bar
-                    dataKey={displayMode === "kWh" ? "previousMonth" : "previousMonthDollars"}
-                    fill={granularity === "24hours" ? "transparent" : "rgba(0, 0, 0, 0.3)"}
-                    stroke={granularity === "24hours" ? "hsl(var(--muted-foreground))" : "none"}
-                    strokeWidth={2}
-                    name={granularity === "24hours" ? (() => {
-                      const yesterday = new Date()
-                      yesterday.setDate(yesterday.getDate() - 1)
-                      const dayName = yesterday.toLocaleDateString('en-US', { weekday: 'short' })
-                      const day = yesterday.getDate()
-                      const month = yesterday.toLocaleDateString('en-US', { month: 'short' })
-                      return `${dayName}, ${day} ${month}`
-                    })() : "Previous Period"}
-                  />
-                )}
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -678,9 +677,9 @@ export function EnergyUsageSummary() {
                           </div>
                           <div className="flex justify-between text-xs">
                             <span className="text-muted-foreground">
-                              {granularity === "24hours" ? "Daily Cost:" :
-                               granularity === "daily" ? "Monthly Cost:" :
-                               "Yearly Cost:"}
+                              {granularity === "24hours" ? "Hour Cost:" :
+                               granularity === "daily" ? "Day Cost:" :
+                               "Month Cost:"}
                             </span>
                             <span className="font-medium">${asset.cost.toFixed(2)}</span>
                           </div>
@@ -697,9 +696,9 @@ export function EnergyUsageSummary() {
                     <div className="flex items-center space-x-2">
                       <Calendar className="h-5 w-5 text-primary" />
                       <span className="font-semibold">
-                        Total {granularity === "24hours" ? "Daily" :
-                               granularity === "daily" ? "Monthly" :
-                               "Yearly"} Cost (All Assets)
+                        Total {granularity === "24hours" ? "Hour" :
+                               granularity === "daily" ? "Day" :
+                               "Month"} Cost (All Assets)
                       </span>
                     </div>
                     <span className="text-xl font-bold text-primary">
